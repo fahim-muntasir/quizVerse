@@ -1,7 +1,7 @@
 import React from "react";
 import { BookOpenCheck } from "lucide-react";
 
-interface FormLayoutProps {
+type FormLayoutProps = {
   children: React.ReactNode; // This allows any valid React child
 }
 

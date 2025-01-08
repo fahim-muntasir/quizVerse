@@ -2,10 +2,11 @@
 import React from "react";
 import Link from "next/link";
 import { UserPlus, Loader2 } from "lucide-react";
-import { cn } from "@/libs/utils";
 import { Formik, Form, Field, ErrorMessage, FormikHelpers } from "formik";
 import { SignUpFormValues } from "@/types/auth";
 import { signUpSchema } from "@/schemas";
+import Button from "../ui/Button";
+import FieldContainer from "../ui/FieldContainer";
 
 export default function SignUp() {
   const initialValues: SignUpFormValues = {
@@ -35,50 +36,41 @@ export default function SignUp() {
       >
         {({ isSubmitting }) => (
           <Form className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300">
-                Full Name
-              </label>
+            <FieldContainer label="Full Name" name="fullName">
               <Field
                 type="text"
                 name="fullName"
-                className="mt-1 block w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                className="mt-1 block w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                 required
                 placeholder="John Doe"
               />
               <ErrorMessage
                 name="fullName"
                 component="div"
-                className="text-sm text-red-400"
+                className="text-sm text-danger-light"
               />
-            </div>
+            </FieldContainer>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-300">
-                Email
-              </label>
+            <FieldContainer label="Email" name="email">
               <Field
                 type="email"
                 name="email"
-                className="mt-1 block w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                className="mt-1 block w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                 required
                 placeholder="you@example.com"
               />
               <ErrorMessage
                 name="email"
                 component="div"
-                className="text-sm text-red-400"
+                className="text-sm text-danger-light"
               />
-            </div>
+            </FieldContainer>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-300">
-                Password
-              </label>
+            <FieldContainer label="Password" name="password">
               <Field
                 type="password"
                 name="password"
-                className="mt-1 block w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                className="mt-1 block w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                 required
                 placeholder="••••••••"
                 minLength={6}
@@ -86,30 +78,23 @@ export default function SignUp() {
               <ErrorMessage
                 name="password"
                 component="div"
-                className="text-sm text-red-400"
+                className="text-sm text-danger-light"
               />
-            </div>
+            </FieldContainer>
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className={cn(
-                "w-full flex items-center justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500",
-                isSubmitting && "opacity-50 cursor-not-allowed"
-              )}
-            >
+            <Button type="submit" isDisabled={isSubmitting}>
               {isSubmitting ? (
                 <Loader2 className="w-5 h-5 animate-spin mr-2" />
               ) : (
                 <UserPlus className="w-5 h-5 mr-2" />
               )}
               Sign Up
-            </button>
+            </Button>
 
             <div className="text-center mt-4">
               <Link
                 href="/auth/signin"
-                className="text-sm text-green-500 hover:text-green-400"
+                className="text-sm text-primary hover:text-primary-light"
               >
                 Already have an account? Sign in
               </Link>
