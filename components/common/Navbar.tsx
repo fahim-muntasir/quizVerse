@@ -1,4 +1,4 @@
-import { BookOpenCheck, LogIn } from "lucide-react";
+import { BookOpenCheck, LogIn, Plus } from "lucide-react";
 import Link from "next/link";
 
 export function Navbar() {
@@ -15,9 +15,15 @@ export function Navbar() {
           </Link>
 
           <div className="flex items-center space-x-4">
+            <button
+              className="flex items-center px-3 py-1 rounded-md border border-primary  bg-primary text-white hover:bg-primary-dark transition-colors"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Quiz
+            </button>
             <Link
               href="/auth"
-              className="flex items-center px-3 py-1 rounded-md border border-green-500 text-green-500 hover:bg-green-500 hover:text-white transition-colors"
+              className="flex items-center px-3 py-1 rounded-md border border-primary text-primary hover:bg-primary hover:text-white transition-colors"
             >
               <LogIn className="w-4 h-4 mr-2" />
               Sign In

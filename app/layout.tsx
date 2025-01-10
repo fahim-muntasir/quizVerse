@@ -1,15 +1,27 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { DM_Sans, Goldman } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+// const geistSans = Geist({
+//   variable: "--font-geist-sans",
+//   subsets: ["latin"],
+// });
+
+// const geistMono = Geist_Mono({
+//   variable: "--font-geist-mono",
+//   subsets: ["latin"],
+// });
+
+const dmSans = DM_Sans({
+  subsets: ['latin'], // Specify subsets
+  weight: ['400', '500', '700'], // Specify weights (optional)
+  variable: '--font-dm-sans', // Define a CSS variable for Tailwind integration
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const goldman = Goldman({
+  subsets: ['latin'], // Specify subsets
+  weight: ['400', '700'], // Specify weights (optional)
+  variable: '--font-goldman', // Define a CSS variable for Tailwind integration
 });
 
 export const metadata: Metadata = {
@@ -25,7 +37,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={` ${dmSans.variable} ${goldman.variable} antialiased`}
       >
         {children}
       </body>
