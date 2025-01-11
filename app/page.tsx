@@ -121,7 +121,7 @@ export default function Home() {
         </div>
       </div>
 
-      <CreateQuizModal isOpen={false} />
+      <CreateQuizModal isOpen={true} />
     </div>
   );
 }

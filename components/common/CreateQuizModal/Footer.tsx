@@ -1,27 +1,41 @@
 import React from "react";
 import { StepForward, StepBack } from "lucide-react";
 import { Question, QuizDetails } from "@/types/quizCreateModal";
+import { useFormikContext } from "formik";
+import { InitialValues } from "@/types/quizCreateModal";
 
 type FooterProps = {
   step: number;
   setStep: (set: number) => void;
   quizDetails: QuizDetails;
   questions: Question[];
+  isSubmitting: boolean;
 };
 
 export default function Footer({
   step,
   setStep,
-  quizDetails,
+  // quizDetails,
   questions,
+  isSubmitting,
 }: FooterProps) {
+  const { values, errors, touched } = useFormikContext<InitialValues>();
+
+  const requiredFieldsToGoToNext = ["title", "category", "description", "duration"];
+
+  // Check if all required fields are valid
+  const areFieldsValid = () =>
+    requiredFieldsToGoToNext.every((field) => 
+      !errors[field as keyof InitialValues] && (touched[field as keyof InitialValues] || values[field as keyof InitialValues])
+    );
+
   return (
     <div className="border-t border-gray-800 p-4 flex justify-between">
       {step === 1 ? (
         <div className="flex justify-end w-full">
           <button
             onClick={() => setStep(2)}
-            disabled={!quizDetails?.title || !quizDetails?.category}
+            disabled={!areFieldsValid()}
             className="px-4 flex items-center justify-center py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Next
@@ -37,12 +51,13 @@ export default function Footer({
             <StepBack className="w-5 h-5 mr-1" /> Back
           </button>
           <button
-            onClick={() => {
-              // Handle quiz creation
-              console.log({ ...quizDetails, questions });
-              // onClose();
-            }}
-            disabled={questions.length === 0}
+            type="submit"
+            // onClick={() => {
+            //   // Handle quiz creation
+            //   console.log({ ...quizDetails, questions });
+            //   // onClose();
+            // }}
+            disabled={questions.length === 0 || isSubmitting}
             className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Create Quiz ({questions.length})

@@ -1,5 +1,5 @@
 export type Question = {
-  id: string;
+  // id: string;
   text: string;
   type: "multiple" | "single" | "text";
   options: string[];
@@ -19,4 +19,8 @@ export type QuizDetails = {
   duration: number;
   difficulty: "Easy" | "Medium" | "Hard";
   totalMarks: number;
+};
+
+export type InitialValues = QuizDetails & {
+  questions: Question[];
 };
