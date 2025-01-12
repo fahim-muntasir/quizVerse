@@ -1,22 +1,17 @@
 import React from "react";
 import { StepForward, StepBack } from "lucide-react";
-import { Question, QuizDetails } from "@/types/quizCreateModal";
 import { useFormikContext } from "formik";
 import { InitialValues } from "@/types/quizCreateModal";
 
 type FooterProps = {
   step: number;
   setStep: (set: number) => void;
-  quizDetails: QuizDetails;
-  questions: Question[];
   isSubmitting: boolean;
 };
 
 export default function Footer({
   step,
   setStep,
-  // quizDetails,
-  questions,
   isSubmitting,
 }: FooterProps) {
   const { values, errors, touched } = useFormikContext<InitialValues>();
@@ -34,6 +29,7 @@ export default function Footer({
       {step === 1 ? (
         <div className="flex justify-end w-full">
           <button
+            type="button"
             onClick={() => setStep(2)}
             disabled={!areFieldsValid()}
             className="px-4 flex items-center justify-center py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -45,6 +41,7 @@ export default function Footer({
       ) : (
         <div className="flex justify-between w-full">
           <button
+            type="button"
             onClick={() => setStep(1)}
             className="px-4 flex items-center py-2 text-white hover:text-green-400 transition-colors"
           >
@@ -52,15 +49,10 @@ export default function Footer({
           </button>
           <button
             type="submit"
-            // onClick={() => {
-            //   // Handle quiz creation
-            //   console.log({ ...quizDetails, questions });
-            //   // onClose();
-            // }}
-            disabled={questions.length === 0 || isSubmitting}
+            disabled={values.questions.length === 0 || isSubmitting}
             className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Create Quiz ({questions.length})
+            Create Quiz ({values.questions.length})
           </button>
         </div>
       )}

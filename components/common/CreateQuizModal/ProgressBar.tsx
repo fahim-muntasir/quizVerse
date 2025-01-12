@@ -8,7 +8,7 @@ type ProgressBarProps = {
 
 export default function ProgressBar({ step }: ProgressBarProps) {
   return (
-    <div className="px-6 pt-4">
+    <div className="px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center w-full relative">
           {/* Step 1 */}

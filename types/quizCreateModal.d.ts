@@ -23,4 +23,5 @@ export type QuizDetails = {
 
 export type InitialValues = QuizDetails & {
   questions: Question[];
+  currentQuestion: Question;
 };
