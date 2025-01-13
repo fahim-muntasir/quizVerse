@@ -6,8 +6,9 @@ import { Field, ErrorMessage, FieldArray, useFormikContext } from "formik";
 import QuestionList from "./QuestionList";
 
 export default function QuestionForm() {
-  const { values, errors, touched, setFieldValue } =
+  const { values, errors, touched, setFieldValue, setTouched } =
     useFormikContext<InitialValues>();
+  const { questions, currentQuestion } = values;
 
   const requiredFieldsToAddQuestions = [
     "text",
@@ -38,7 +39,7 @@ export default function QuestionForm() {
   const isAddQuestionDisabled = !areFieldsValid();
 
   const addQuestionHandler = () => {
-    const updatedQuestions = [...values.questions, values.currentQuestion];
+    const updatedQuestions = [...questions, currentQuestion];
     setFieldValue("questions", updatedQuestions);
     setFieldValue("currentQuestion", {
       text: "",
@@ -47,12 +48,46 @@ export default function QuestionForm() {
       correctAnswer: [],
       marks: 1,
     });
+
+    // Reset the touched state for currentQuestion
+    setTouched({
+      currentQuestion: {
+        text: false,
+        type: false,
+        //options: [false, false], // Adjust based on your options structure
+        correctAnswer: false,
+        marks: false,
+      },
+    });
+  };
+
+  // remove question handler for question list
+  const removeQuestion = (index: number) => {
+    const updatedQuestions = questions.filter((_, i) => i !== index);
+    setFieldValue("questions", updatedQuestions);
+  };
+
+  // edit question handler for question list
+  const editQuestion = (index: number) => {
+    const selectedQuestionToUpdate = questions.filter((_, i) => i === index);
+    const updatedQuestions = questions.filter((_, i) => i !== index);
+
+    setFieldValue("questions", updatedQuestions);
+
+    setFieldValue("currentQuestion", {
+      ...selectedQuestionToUpdate?.[0],
+      isUpdate: true,
+    });
   };
 
   return (
     <div>
       {/* Existing Questions List */}
-      <QuestionList />
+      <QuestionList
+        questions={questions}
+        onRemoveQuestion={removeQuestion}
+        onEditQuestion={editQuestion}
+      />
 
       {/* Add New Question Form */}
       <div className="bg-[#343434] p-4 rounded-lg border border-gray-700">
@@ -236,6 +271,7 @@ export default function QuestionForm() {
 
                             {index > 1 && (
                               <button
+                                type="button"
                                 onClick={() => remove(index)}
                                 className="text-red-500 hover:text-red-400 p-2"
                               >
@@ -275,8 +311,13 @@ export default function QuestionForm() {
             onClick={addQuestionHandler}
             className="w-full flex justify-center items-center px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Plus className="w-5 h-5 mr-1" />
-            Add Question
+            {currentQuestion.isUpdate && "Update Question"}
+            {!currentQuestion.isUpdate && (
+              <>
+                <Plus className="w-5 h-5 mr-1" />
+                Add Question
+              </>
+            )}
           </button>
         </div>
       </div>
