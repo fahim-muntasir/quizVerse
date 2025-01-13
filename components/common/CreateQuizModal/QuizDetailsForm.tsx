@@ -2,14 +2,12 @@ import React from "react";
 import { cn } from "@/libs/utils";
 import { Clock } from "lucide-react";
 import { Field, ErrorMessage } from "formik";
+import FieldContainer from "@/components/ui/FieldContainer";
 
 export default function QuizDetailsForm() {
   return (
     <div className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">
-          Quiz Title
-        </label>
+      <FieldContainer label="Quiz Title" name="quizTitle">
         <Field
           type="text"
           name="title"
@@ -21,12 +19,9 @@ export default function QuizDetailsForm() {
           component="div"
           className="text-sm text-danger-light"
         />
-      </div>
+      </FieldContainer>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">
-          Description
-        </label>
+      <FieldContainer label="Description" name="description">
         <Field
           name="description"
           as="textarea"
@@ -39,13 +34,10 @@ export default function QuizDetailsForm() {
           component="div"
           className="text-sm text-danger-light"
         />
-      </div>
+      </FieldContainer>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">
-            Category
-          </label>
+        <FieldContainer label="Category" name="category">
           <Field
             name="category"
             as="select"
@@ -62,12 +54,9 @@ export default function QuizDetailsForm() {
             component="div"
             className="text-sm text-danger-light"
           />
-        </div>
+        </FieldContainer>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">
-            Duration (minutes)
-          </label>
+        <FieldContainer label="Duration (minutes)" name="duration">
           <div className="relative">
             <Field
               type="number"
@@ -82,11 +71,9 @@ export default function QuizDetailsForm() {
             component="div"
             className="text-sm text-danger-light"
           />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">
-            Difficulty
-          </label>
+        </FieldContainer>
+
+        <FieldContainer label="Difficulty" name="difficulty">
           <Field name="difficulty">
             {({ field }: { field: { value: string } }) => (
               <div className="flex space-x-2">
@@ -122,7 +109,7 @@ export default function QuizDetailsForm() {
             component="div"
             className="text-sm text-danger-light"
           />
-        </div>
+        </FieldContainer>
       </div>
     </div>
   );

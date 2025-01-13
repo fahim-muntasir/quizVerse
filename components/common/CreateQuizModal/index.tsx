@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "./Header";
 import ProgressBar from "./ProgressBar";
 import Footer from "./Footer";
@@ -23,10 +23,10 @@ export default function CreateQuizModal({ isOpen }: CreateQuizModalProps) {
     questions: [],
     currentQuestion: {
       text: "",
-      type: "multiple",
+      type: "single",
       options: ["", ""],
       correctAnswer: [],
-      marks: 1,
+      marks: 5,
     },
   };
 
@@ -38,11 +38,24 @@ export default function CreateQuizModal({ isOpen }: CreateQuizModalProps) {
     setSubmitting(false);
   };
 
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    // Clean up on component unmount
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
-      <div className="bg-[#1C1C1C] w-full max-w-4xl rounded-lg shadow-xl">
+      <div className="bg-background border border-gray-900 w-full max-w-4xl rounded-lg shadow-xl">
         <Formik
           initialValues={initialValues}
           onSubmit={doSubmit}

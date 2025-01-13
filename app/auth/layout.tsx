@@ -1,11 +1,11 @@
-import React from "react";
+import React from 'react'
 import { BookOpenCheck } from "lucide-react";
 
-type FormLayoutProps = {
-  children: React.ReactNode; // This allows any valid React child
-}
-
-const FormLayout: React.FC<FormLayoutProps> = ({ children }) => {
+export default function AuthLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative bg-[#1C1C1C]">
       {/* Background Image with Overlay */}
@@ -33,12 +33,10 @@ const FormLayout: React.FC<FormLayoutProps> = ({ children }) => {
       </div>
 
       <div className="mt-8 sm:mx-auto mx-auto w-11/12 sm:w-full sm:max-w-md relative z-10">
-        <div className="bg-[#1C1C1C] border border-gray-900 rounded-lg relative">
+        <div className="bg-background border border-gray-900 rounded-lg relative">
           {children}
         </div>
       </div>
     </div>
-  );
-};
-
-export default FormLayout;
+  )
+}

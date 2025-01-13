@@ -4,6 +4,8 @@ import { Plus, Trash2 } from "lucide-react";
 import { InitialValues } from "@/types/quizCreateModal";
 import { Field, ErrorMessage, FieldArray, useFormikContext } from "formik";
 import QuestionList from "./QuestionList";
+import Button from "@/components/ui/Button";
+import FieldContainer from "@/components/ui/FieldContainer";
 
 export default function QuestionForm() {
   const { values, errors, touched, setFieldValue, setTouched } =
@@ -43,10 +45,10 @@ export default function QuestionForm() {
     setFieldValue("questions", updatedQuestions);
     setFieldValue("currentQuestion", {
       text: "",
-      type: "multiple",
+      type: "single",
       options: ["", ""],
       correctAnswer: [],
-      marks: 1,
+      marks: 5,
     });
 
     // Reset the touched state for currentQuestion
@@ -95,15 +97,12 @@ export default function QuestionForm() {
           Add New Question
         </h3>
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Question Text
-            </label>
+          <FieldContainer label="Question Text" name="questionText">
             <Field
               as="textarea"
               id={`currentQuestion.text`}
               name={`currentQuestion.text`}
-              className="w-full px-3 py-2 bg-[#1C1C1C] border border-gray-700 rounded-md text-white focus:outline-none focus:border-green-500"
+              className="w-full px-3 py-2 bg-background border border-gray-700 rounded-md text-white focus:outline-none focus:border-green-500"
               rows={2}
               placeholder="Enter your question"
             />
@@ -112,18 +111,15 @@ export default function QuestionForm() {
               component="div"
               className="text-sm text-danger-light"
             />
-          </div>
+          </FieldContainer>
 
           <div className="grid grid-cols-2 gap-4">
             {/* Question Type */}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Question Type
-              </label>
+            <FieldContainer label="Question Type" name="questionType">
               <Field name={`currentQuestion.type`}>
                 {({ field }: { field: { value: string } }) => (
                   <div className="flex space-x-2">
-                    {["multiple", "single"].map((type) => (
+                    {["single", "multiple" ].map((type) => (
                       <label
                         key={type}
                         className={cn(
@@ -152,13 +148,10 @@ export default function QuestionForm() {
                   </div>
                 )}
               </Field>
-            </div>
+            </FieldContainer>
 
             {/* Marks */}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Marks
-              </label>
+            <FieldContainer label="Marks" name="marks">
               <Field name={`currentQuestion.marks`}>
                 {({ field }: { field: { value: number } }) => (
                   <div className="flex space-x-2">
@@ -169,7 +162,7 @@ export default function QuestionForm() {
                           "w-20 px-4 py-2 rounded-md border transition-all duration-300 text-center cursor-pointer",
                           field.value == mark
                             ? "bg-primary/10 text-primary border-primary/20"
-                            : "bg-[#1C1C1C] border border-gray-700 text-white"
+                            : "bg-background border border-gray-700 text-white"
                         )}
                       >
                         <input
@@ -185,7 +178,7 @@ export default function QuestionForm() {
                     <div className="relative">
                       <Field
                         type="number"
-                        className="w-24 px-3 py-2 bg-[#1C1C1C] border border-gray-700 rounded-md text-white focus:outline-none focus:border-primary"
+                        className="w-24 px-3 py-2 bg-background border border-gray-700 rounded-md text-white focus:outline-none focus:border-primary"
                         placeholder="..."
                         name={`currentQuestion.marks`}
                         min="1"
@@ -200,14 +193,11 @@ export default function QuestionForm() {
                 component="div"
                 className="text-sm text-danger-light"
               />
-            </div>
+            </FieldContainer>
           </div>
 
           {/* Question Option  */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Options
-            </label>
+          <FieldContainer label="Options" name="options">
             <div className="space-y-2">
               <FieldArray name={`currentQuestion.options`}>
                 {({ push, remove, form }) => (
@@ -224,7 +214,7 @@ export default function QuestionForm() {
                                   index.toString()
                                 )
                                   ? "bg-primary/10 text-primary border-primary/20"
-                                  : "bg-[#1C1C1C] border border-gray-700 text-white"
+                                  : "bg-background border border-gray-700 text-white"
                               )}
                               onClick={() => {
                                 const correctAnswer = form.values
@@ -263,7 +253,7 @@ export default function QuestionForm() {
                             <Field
                               type="text"
                               name={`currentQuestion.options[${index}]`}
-                              className="flex-1 px-3 py-2 bg-[#1C1C1C] border border-gray-700 rounded-md text-white focus:outline-none focus:border-green-500"
+                              className="flex-1 px-3 py-2 bg-background border border-gray-700 rounded-md text-white focus:outline-none focus:border-green-500"
                               placeholder={`Option ${String.fromCharCode(
                                 65 + index
                               )}`} // A, B, C, ...
@@ -303,13 +293,11 @@ export default function QuestionForm() {
                 )}
               </FieldArray>
             </div>
-          </div>
-
-          <button
-            type="button"
-            disabled={isAddQuestionDisabled}
-            onClick={addQuestionHandler}
-            className="w-full flex justify-center items-center px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          </FieldContainer>
+          <Button
+            isDisabled={isAddQuestionDisabled}
+            onHandler={addQuestionHandler}
+            fullWidth={true}
           >
             {currentQuestion.isUpdate && "Update Question"}
             {!currentQuestion.isUpdate && (
@@ -318,7 +306,7 @@ export default function QuestionForm() {
                 Add Question
               </>
             )}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

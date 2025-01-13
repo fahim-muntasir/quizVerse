@@ -13,7 +13,7 @@ export default {
         goldman: ['var(--font-goldman)', ...fontFamily.sans],
       },
       colors: {
-        background: "var(--background)",
+        background: "#1C1C1C",
         foreground: "var(--foreground)",
         primary: {
           DEFAULT: '#22c55e',

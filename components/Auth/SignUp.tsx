@@ -40,7 +40,7 @@ export default function SignUp() {
               <Field
                 type="text"
                 name="fullName"
-                className="mt-1 block w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                className="block w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                 required
                 placeholder="John Doe"
               />
@@ -55,7 +55,7 @@ export default function SignUp() {
               <Field
                 type="email"
                 name="email"
-                className="mt-1 block w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                className="block w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                 required
                 placeholder="you@example.com"
               />
@@ -70,7 +70,7 @@ export default function SignUp() {
               <Field
                 type="password"
                 name="password"
-                className="mt-1 block w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                className="block w-full px-3 py-2 bg-gray-900 border border-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                 required
                 placeholder="••••••••"
                 minLength={6}
@@ -82,7 +82,7 @@ export default function SignUp() {
               />
             </FieldContainer>
 
-            <Button type="submit" isDisabled={isSubmitting}>
+            <Button type="submit" isDisabled={isSubmitting} fullWidth={true}>
               {isSubmitting ? (
                 <Loader2 className="w-5 h-5 animate-spin mr-2" />
               ) : (
