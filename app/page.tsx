@@ -3,7 +3,6 @@ import { QuizCard } from "@/components/Home/QuizCard";
 import { RecentQuizzes } from "@/components/Home/RecentQuizzes";
 import { SearchAndFilter } from "@/components/Home/SearchAndFilter";
 import Hero from "@/components/Home/Hero";
-import CreateQuizModal from "../components/common/CreateQuizModal";
 import { BackgroundPattern } from "@/components/background/BackgroundPattern";
 
 // Mock data (replace with real data later)
@@ -120,8 +119,6 @@ export default function Home() {
           </div>
         </div>
       </div>
-
-      <CreateQuizModal isOpen={true} />
     </div>
   );
 }

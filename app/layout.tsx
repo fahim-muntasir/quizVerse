@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Sans, Goldman } from "next/font/google";
+import StoreProvider from "@/components/StoreProvider";
 import "./globals.css";
 
 // const geistSans = Geist({
@@ -13,15 +14,15 @@ import "./globals.css";
 // });
 
 const dmSans = DM_Sans({
-  subsets: ['latin'], // Specify subsets
-  weight: ['400', '500', '700'], // Specify weights (optional)
-  variable: '--font-dm-sans', // Define a CSS variable for Tailwind integration
+  subsets: ["latin"], // Specify subsets
+  weight: ["400", "500", "700"], // Specify weights (optional)
+  variable: "--font-dm-sans", // Define a CSS variable for Tailwind integration
 });
 
 const goldman = Goldman({
-  subsets: ['latin'], // Specify subsets
-  weight: ['400', '700'], // Specify weights (optional)
-  variable: '--font-goldman', // Define a CSS variable for Tailwind integration
+  subsets: ["latin"], // Specify subsets
+  weight: ["400", "700"], // Specify weights (optional)
+  variable: "--font-goldman", // Define a CSS variable for Tailwind integration
 });
 
 export const metadata: Metadata = {
@@ -36,10 +37,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={` ${dmSans.variable} ${goldman.variable} antialiased`}
-      >
-        {children}
+      <body className={` ${dmSans.variable} ${goldman.variable} antialiased`}>
+        <StoreProvider>{children}</StoreProvider>
       </body>
     </html>
   );
