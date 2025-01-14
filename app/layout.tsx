@@ -3,16 +3,6 @@ import { DM_Sans, Goldman } from "next/font/google";
 import StoreProvider from "@/components/StoreProvider";
 import "./globals.css";
 
-// const geistSans = Geist({
-//   variable: "--font-geist-sans",
-//   subsets: ["latin"],
-// });
-
-// const geistMono = Geist_Mono({
-//   variable: "--font-geist-mono",
-//   subsets: ["latin"],
-// });
-
 const dmSans = DM_Sans({
   subsets: ["latin"], // Specify subsets
   weight: ["400", "500", "700"], // Specify weights (optional)
@@ -39,6 +29,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={` ${dmSans.variable} ${goldman.variable} antialiased`}>
         <StoreProvider>{children}</StoreProvider>
+        <div id="modal-portal"></div>
       </body>
     </html>
   );

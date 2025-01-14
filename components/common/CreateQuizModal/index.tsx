@@ -1,6 +1,6 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import Header from "./Header";
+import React, { useState } from "react";
+import Modal from "../Modal";
 import ProgressBar from "./ProgressBar";
 import Footer from "./Footer";
 import { CreateQuizModalProps } from "@/types/quizCreateModal";
@@ -9,9 +9,16 @@ import QuestionForm from "./QuestionForm";
 import { Formik, Form, FormikHelpers } from "formik";
 import { InitialValues } from "@/types/quizCreateModal";
 import { quizCreationSchema } from "@/schemas";
+import { useAppDispatch } from "@/libs/hooks";
+import { close } from "@/libs/features/createQuiz/createQuizSlice";
 
 export default function CreateQuizModal({ isOpen }: CreateQuizModalProps) {
   const [step, setStep] = useState(1);
+  const dispatch = useAppDispatch();
+
+  const onCloseHandler = () => {
+    dispatch(close());
+  };
 
   const initialValues: InitialValues = {
     title: "",
@@ -38,58 +45,36 @@ export default function CreateQuizModal({ isOpen }: CreateQuizModalProps) {
     setSubmitting(false);
   };
 
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-
-    // Clean up on component unmount
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
-
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
-      <div className="bg-background border border-gray-900 w-full max-w-4xl rounded-lg shadow-xl">
-        <Formik
-          initialValues={initialValues}
-          onSubmit={doSubmit}
-          validationSchema={quizCreationSchema}
-        >
-          {({ isSubmitting }) => (
-            <Form>
-              {/* Heaser  */}
-              <Header />
+    <Modal onClose={onCloseHandler} title="Create New Quiz">
+      <Formik
+        initialValues={initialValues}
+        onSubmit={doSubmit}
+        validationSchema={quizCreationSchema}
+      >
+        {({ isSubmitting }) => (
+          <Form>
+            {/* Progress Steps */}
+            <ProgressBar step={step} />
 
-              {/* Progress Steps */}
-              <ProgressBar step={step} />
+            {/* Content */}
+            <div className="p-6 max-h-[600px] overflow-auto">
+              {step === 1 ? (
+                /* Quiz Details Form */
+                <QuizDetailsForm />
+              ) : (
+                /* Questions Form */
+                <QuestionForm />
+              )}
+            </div>
 
-              {/* Content */}
-              <div className="p-6 max-h-[600px] overflow-auto">
-                {step === 1 ? (
-                  /* Quiz Details Form */
-                  <QuizDetailsForm />
-                ) : (
-                  /* Questions Form */
-                  <QuestionForm />
-                )}
-              </div>
-
-              {/* Footer */}
-              <Footer
-                step={step}
-                setStep={setStep}
-                isSubmitting={isSubmitting}
-              />
-            </Form>
-          )}
-        </Formik>
-      </div>
-    </div>
+            {/* Footer */}
+            <Footer step={step} setStep={setStep} isSubmitting={isSubmitting} />
+          </Form>
+        )}
+      </Formik>
+    </Modal>
   );
 }
