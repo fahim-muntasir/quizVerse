@@ -2,16 +2,16 @@
 import React from "react";
 import { BookOpenCheck, LogIn, Plus } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/libs/hooks";
-import { open } from "@/libs/features/createQuiz/createQuizSlice";
+import { openCreateQuizModal } from "@/libs/features/modal/modalSlice";
 import Link from "next/link";
-import CreateQuizModal from "./CreateQuizModal";
+import CreateQuizModal from "../CreateQuizModal";
 
 export function Navbar() {
   const dispatch = useAppDispatch();
-  const isOpen = useAppSelector((state) => state.createQuiz.isOpen);
+  const isOpen = useAppSelector((state) => state.modal.createQuizModal.isOpen);
 
   const createQuizHandler = () => {
-    dispatch(open());
+    dispatch(openCreateQuizModal());
   };
 
   return (

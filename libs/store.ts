@@ -1,10 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
-import createQuizReducer from "@/libs/features/createQuiz/createQuizSlice";
+import modalReducer from "@/libs/features/modal/modalSlice";
+import participantQuizReducer from "@/libs/features/participantQuiz/participantQuizSlice";
 
 export const makeStore = () => {
   return configureStore({
     reducer: {
-      createQuiz: createQuizReducer,
+      modal: modalReducer,
+      participantQuiz: participantQuizReducer,
     },
   });
 };

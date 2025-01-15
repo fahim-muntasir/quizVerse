@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import Modal from "../Modal";
+import Modal from "../common/Modal";
 import ProgressBar from "./ProgressBar";
 import Footer from "./Footer";
 import { CreateQuizModalProps } from "@/types/quizCreateModal";
@@ -10,14 +10,15 @@ import { Formik, Form, FormikHelpers } from "formik";
 import { InitialValues } from "@/types/quizCreateModal";
 import { quizCreationSchema } from "@/schemas";
 import { useAppDispatch } from "@/libs/hooks";
-import { close } from "@/libs/features/createQuiz/createQuizSlice";
+import { closeCreateQuizModal } from "@/libs/features/modal/modalSlice";
+import Header from "./Header";
 
 export default function CreateQuizModal({ isOpen }: CreateQuizModalProps) {
   const [step, setStep] = useState(1);
   const dispatch = useAppDispatch();
 
   const onCloseHandler = () => {
-    dispatch(close());
+    dispatch(closeCreateQuizModal());
   };
 
   const initialValues: InitialValues = {
@@ -48,7 +49,8 @@ export default function CreateQuizModal({ isOpen }: CreateQuizModalProps) {
   if (!isOpen) return null;
 
   return (
-    <Modal onClose={onCloseHandler} title="Create New Quiz">
+    <Modal onClose={onCloseHandler}>
+      <Header onClose={onCloseHandler} title="Create New Quiz" />
       <Formik
         initialValues={initialValues}
         onSubmit={doSubmit}

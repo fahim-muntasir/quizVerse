@@ -1,15 +1,13 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import Header from "./Header";
 import { createPortal } from "react-dom";
 
 type ModalProps = {
   children: React.ReactNode;
   onClose: () => void;
-  title: string;
 };
 
-export default function Modal({ children, onClose, title }: ModalProps) {
+export default function Modal({ children, onClose}: ModalProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -39,9 +37,6 @@ export default function Modal({ children, onClose, title }: ModalProps) {
         onClick={(e) => e.stopPropagation()}
         className="bg-background border border-gray-900 w-full max-w-4xl rounded-lg shadow-xl"
       >
-        {/* Heaser  */}
-        <Header onClose={onClose} title={title} />
-
         {children}
       </div>
     </div>,
