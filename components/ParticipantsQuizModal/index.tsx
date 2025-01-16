@@ -1,19 +1,21 @@
+"use client"
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, AlertCircle, HelpCircle, Square, Radio } from 'lucide-react';
-import { cn } from '@/libs/utils';
 import { useAppSelector, useAppDispatch } from '@/libs/hooks';
 import { closeParticipateQuizModal } from '@/libs/features/modal/modalSlice';
 import { onSelectQuiz } from '@/libs/features/participantQuiz/participantQuizSlice';
 import Header from './Header';
 import Modal from '../common/Modal';
+import ProgressBar from './ProgressBar';
+import QuestionOption from '../common/QuestionOption';
+import Footer from './Footer';
+import Question from '../common/Question';
 
-interface QuizModalProps {
-  isOpen: boolean;
-}
-
-export default function QuizModal({ isOpen }: QuizModalProps) {
+export default function QuizModal() {
   const dispatch = useAppDispatch()
   const selectedQuiz = useAppSelector(state => state.participantQuiz.selectedQuiz);
+  const isOpen = useAppSelector(
+    (state) => state.modal.participateQuizModal.isOpen
+  );
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string[]>>({});
@@ -89,105 +91,21 @@ export default function QuizModal({ isOpen }: QuizModalProps) {
       <Header title={selectedQuiz.title} description={selectedQuiz.description} timeLeft={timeLeft} onClose={onCloseHandler} />
 
       {/* Progress */}
-      <div className="p-4 border-b border-gray-800">
-        <div className="flex justify-between items-center text-sm text-gray-400 mb-2">
-          <span>Progress</span>
-          <span>{currentQuestionIndex + 1}/{selectedQuiz.questions.length}</span>
-        </div>
-        <div className="h-1.5 bg-[#343434] rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full transition-all duration-300"
-            style={{ width: `${((currentQuestionIndex + 1) / selectedQuiz.questions.length) * 100}%` }}
-          />
-        </div>
-      </div>
+      <ProgressBar currentQuestionIndex={currentQuestionIndex} questionLength={selectedQuiz.questions.length} />
 
       {/* Question */}
       <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <HelpCircle className="w-5 h-5 text-green-500" />
-            <span className="text-sm font-medium text-gray-400">Question {currentQuestionIndex + 1}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">Points:</span>
-            <span className="text-sm font-medium text-green-500">{currentQuestion.points}</span>
-          </div>
-        </div>
-
-        <h3 className="text-xl text-white font-medium mb-4">{currentQuestion.text}</h3>
-
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#343434] text-sm mb-6">
-          <span className="text-gray-400">Type:</span>
-          <span className="text-white font-medium">
-            {currentQuestion.type === 'single' ? 'Single Choice' : 'Multiple Choice'}
-          </span>
-        </div>
+        <Question currentQuestionIndex={currentQuestionIndex} marks={currentQuestion.points} type={currentQuestion.type} text={currentQuestion.text} />
 
         <div className="space-y-3">
           {currentQuestion.options.map((option, index) => (
-            <button
-              key={index}
-              onClick={() => handleAnswerSelect(currentQuestion.id, index.toString())}
-              className={cn(
-                "w-full text-left p-4 rounded-lg border transition-all",
-                selectedAnswers[currentQuestion.id]?.includes(index.toString())
-                  ? "bg-green-500/10 border-green-500 text-white"
-                  : "bg-[#343434] border-gray-700 text-gray-300 hover:border-green-500/50"
-              )}
-            >
-              <div className="flex items-center space-x-3">
-                {currentQuestion.type === 'single' ? (
-                  <Radio className={cn(
-                    "w-5 h-5",
-                    selectedAnswers[currentQuestion.id]?.includes(index.toString())
-                      ? "text-green-500"
-                      : "text-gray-600"
-                  )} />
-                ) : (
-                  <Square className={cn(
-                    "w-5 h-5",
-                    selectedAnswers[currentQuestion.id]?.includes(index.toString())
-                      ? "text-green-500"
-                      : "text-gray-600"
-                  )} />
-                )}
-                <span>{option}</span>
-              </div>
-            </button>
+            <QuestionOption key={index} onClickHandler={() => handleAnswerSelect(currentQuestion.id, index.toString())} selectedAnswers={selectedAnswers[currentQuestion.id]} questionType={currentQuestion.type} option={option} index={index.toString()} />
           ))}
         </div>
       </div>
 
       {/* Footer */}
-      <div className="border-t border-gray-800 p-4 flex justify-between items-center">
-        <div className="flex items-center text-gray-400">
-          <AlertCircle className="w-4 h-4 mr-2" />
-          <span className="text-sm">
-            {currentQuestion.type === 'single'
-              ? 'Select one answer to continue'
-              : 'Select one or more answers to continue'}
-          </span>
-        </div>
-        {currentQuestionIndex < selectedQuiz.questions.length - 1 ? (
-          <button
-            onClick={handleNext}
-            disabled={!selectedAnswers[currentQuestion.id]}
-            className="flex items-center px-6 py-2.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Next Question
-            <ChevronRight className="w-4 h-4 ml-2" />
-          </button>
-        ) : (
-          <button
-            onClick={handleSubmit}
-            disabled={isSubmitting || !selectedAnswers[currentQuestion.id]}
-            className="px-6 py-2.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit Quiz'}
-          </button>
-        )}
-      </div>
+      <Footer questionType={currentQuestion.type} currentQuestionIndex={currentQuestionIndex} selectedQuizQuestionLength={selectedQuiz.questions.length} selectedAnswers={selectedAnswers[currentQuestion.id]} handleNext={handleNext} handleSubmit={handleSubmit} isSubmitting={isSubmitting} />
     </Modal>
   );
 }

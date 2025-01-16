@@ -22,3 +22,20 @@ export type Quiz = {
   activeStatus: boolean;
   questions: Question[];
 };
+
+type QuizResultData = {
+  quizTitle: string;
+  score: number;
+  totalQuestions: number;
+  correctAnswers: number;
+  timeTaken: string;
+  questions: {
+    id: string;
+    text: string;
+    userAnswer: string[];
+    correctAnswer: string[];
+    options: string[];
+    explanation?: string;
+    type: QuestionType;
+  }[];
+}

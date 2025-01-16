@@ -82,7 +82,7 @@ export function QuizCard({ quiz }: QuizCardProps) {
   };
 
   return (
-    <div className="bg-[#1C1C1C] border border-gray-800 rounded-lg p-6 hover:border-green-500/50 transition-all">
+    <div className="bg-background border border-gray-800 rounded-lg p-6 hover:border-green-500/50 transition-all">
       <div className="flex justify-between items-start mb-4">
         <div>
           <div className="flex items-center gap-2 mb-4">

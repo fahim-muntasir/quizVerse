@@ -1,8 +1,6 @@
-"use client";
 import React from "react";
 import { QuizCard } from "./QuizCard";
 import ParticipantsQuizModal from "@/components/ParticipantsQuizModal";
-import { useAppSelector } from "@/libs/hooks";
 
 // Mock data (replace with real data later)
 const quizzes = [
@@ -44,11 +42,6 @@ const quizzes = [
 ];
 
 export default function QuizList() {
-  // const [showCreateQuiz, setShowCreateQuiz] = useState(false);
-  const isOpen = useAppSelector(
-    (state) => state.modal.participateQuizModal.isOpen
-  );
-
   return (
     <>
       <div className="lg:col-span-2">
@@ -61,7 +54,7 @@ export default function QuizList() {
           ))}
         </div>
       </div>
-      <ParticipantsQuizModal isOpen={isOpen} />
+      <ParticipantsQuizModal />
     </>
   );
 }
