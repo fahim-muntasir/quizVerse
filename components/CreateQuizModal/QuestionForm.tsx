@@ -63,33 +63,10 @@ export default function QuestionForm() {
     });
   };
 
-  // remove question handler for question list
-  const removeQuestion = (index: number) => {
-    const updatedQuestions = questions.filter((_, i) => i !== index);
-    setFieldValue("questions", updatedQuestions);
-  };
-
-  // edit question handler for question list
-  const editQuestion = (index: number) => {
-    const selectedQuestionToUpdate = questions.filter((_, i) => i === index);
-    const updatedQuestions = questions.filter((_, i) => i !== index);
-
-    setFieldValue("questions", updatedQuestions);
-
-    setFieldValue("currentQuestion", {
-      ...selectedQuestionToUpdate?.[0],
-      isUpdate: true,
-    });
-  };
-
   return (
     <div>
       {/* Existing Questions List */}
-      <QuestionList
-        questions={questions}
-        onRemoveQuestion={removeQuestion}
-        onEditQuestion={editQuestion}
-      />
+      <QuestionList />
 
       {/* Add New Question Form */}
       <div className="bg-[#343434] p-4 rounded-lg border border-gray-700">
