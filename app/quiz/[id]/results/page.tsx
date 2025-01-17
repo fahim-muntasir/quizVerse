@@ -5,6 +5,7 @@ import Banner from '@/components/Result/Banner';
 import Stats from '@/components/Result/Stats';
 import { QuizResultData } from '@/types/quiz';
 import QuestionsReview from '@/components/Result/QuestionsReview';
+import Button from '@/components/ui/Button';
 
 export default function QuizResult() {
   // Mock data (replace with real data from your backend)
@@ -23,6 +24,7 @@ export default function QuizResult() {
         options: ["London", "Berlin", "Paris", "Madrid"],
         explanation: "Paris is the capital city of France.",
         type: "single",
+        isCorrectAnswer: true
       },
       {
         id: "2",
@@ -31,7 +33,8 @@ export default function QuizResult() {
         correctAnswer: ["0", "1", "3"],
         options: ["Python", "JavaScript", "Banana", "Java"],
         explanation: "Python, JavaScript, and Java are programming languages, while Banana is a fruit.",
-        type: "multiple"
+        type: "multiple",
+        isCorrectAnswer: true
       }
     ]
   };
@@ -56,13 +59,13 @@ export default function QuizResult() {
         {/* Call-to-Action Footer */}
         <div className="mt-12 bg-background backdrop-blur-lg rounded-lg p-6 text-center border border-gray-800">
           <h3 className="text-xl font-bold text-white mb-2">Ready for Another Challenge?</h3>
-          <p className="text-gray-400 mb-4">Test your knowledge with more quizzes on QuizLingo</p>
-          <button
-            // onClick={() => window.location.href = '/'}
-            className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-          >
-            Explore More Quizzes
-          </button>
+          <p className="text-gray-400 mb-4">Test your knowledge with more quizzes on QuizVerse</p>
+
+          <div className='flex justify-center'>
+            <Button isDisabled={false}>
+              Explore More Quizzes
+            </Button>
+          </div>
         </div>
       </div>
     </div>

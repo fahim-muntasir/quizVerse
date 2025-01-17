@@ -2,15 +2,15 @@ import React from 'react'
 import { cn } from '@/libs/utils'
 import { Radio, Square } from 'lucide-react'
 
-type QuestionOptionProps = {
-  onClickHandler?: () => void;
+type QuizOptionProps = {
+  onClickHandler: () => void;
   selectedAnswers: string[];
   questionType: string;
   option: string;
   index: string;
 }
 
-export default function QuestionOption({ onClickHandler, selectedAnswers, questionType, option, index }: QuestionOptionProps) {
+export default function QuizOption({ onClickHandler, selectedAnswers, questionType, option, index }: QuizOptionProps) {
   return (
     <button
       onClick={onClickHandler}

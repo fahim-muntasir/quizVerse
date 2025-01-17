@@ -6,7 +6,7 @@ import { onSelectQuiz } from '@/libs/features/participantQuiz/participantQuizSli
 import Header from './Header';
 import Modal from '../common/Modal';
 import ProgressBar from './ProgressBar';
-import QuestionOption from '../common/QuestionOption';
+import QuestionOption from '../common/QuizOption';
 import Footer from './Footer';
 import Question from '../common/Question';
 

@@ -37,5 +37,6 @@ type QuizResultData = {
     options: string[];
     explanation?: string;
     type: QuestionType;
+    isCorrectAnswer: boolean;
   }[];
 }

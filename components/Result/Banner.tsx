@@ -13,7 +13,7 @@ export default function Banner({ score, quizTitle }: BannerProps) {
 
   const getShareMessage = () => {
     const level = score >= 80 ? 'Advanced' : score >= 60 ? 'Intermediate' : 'Beginner';
-    return `I just scored ${score}% on the ${quizTitle} quiz and achieved ${level} level! Challenge yourself on QuizLingo! 🎯`;
+    return `I just scored ${score}% on the ${quizTitle} quiz and achieved ${level} level! Challenge yourself on QuizVerse! 🎯`;
   };
 
   const handleShare = async (platform: 'twitter' | 'facebook' | 'copy') => {
