@@ -1,47 +1,95 @@
-import React from "react";
+"use client";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { QuizCard } from "./QuizCard";
 import ParticipantsQuizModal from "@/components/ParticipantsQuizModal";
-
-// Mock data (replace with real data later)
-const quizzes = [
-  {
-    id: "1",
-    title: "JavaScript Fundamentals",
-    description:
-      "Test your knowledge of JavaScript basics including variables, functions, and control flow.",
-    category: "Programming",
-    participants: 1234,
-    duration: "30 mins",
-    difficulty: "Easy" as const,
-    totalMarks: 100,
-    admin: "john@example.com",
-    activeStatus: true,
-    questions: [
-      {
-        id: "q1",
-        text: "What is JavaScript?",
-        options: [
-          "A programming language",
-          "A markup language",
-          "A database",
-          "A server",
-        ],
-        type: "single" as const,
-        points: 5,
-      },
-      {
-        id: "q2",
-        text: "Which of these are valid JavaScript data types?",
-        options: ["String", "Number", "Boolean", "All of the above"],
-        type: "single" as const,
-        points: 5,
-      },
-    ],
-  },
-  // Add more quizzes here
-];
+import { useGetQuizzesQuery } from "@/libs/features/quiz/quizApiSlice";
+import QuizCardLoader from "./QuizCardLoader";
+import { isQuizResponse } from "@/utils/typeGuards";
+import { Quiz } from "@/types/quiz";
 
 export default function QuizList() {
+  const [hasData, setHasData] = useState(false);
+  const [page, setPage] = useState(1);
+  const [allQuizzes, setAllQuizzes] = useState<Quiz[]>([]);
+
+  // Fetch data using RTK Query
+  const { data: quizzes, isLoading, isError, isSuccess } = useGetQuizzesQuery({
+    page,
+    limit: 10,
+  });
+
+  // Validate the type of quizzes using the type guard
+  const isValidResponse = quizzes && isQuizResponse(quizzes);
+
+  useEffect(() => {
+    if (hasData) {
+      setPage((prevPage) => prevPage + 1);
+    }
+  }, [hasData]);
+
+  useEffect(() => {
+    if (isSuccess && isValidResponse) {
+      setAllQuizzes((prevQuizzes) => [...prevQuizzes, ...quizzes.data]);
+    }
+  }, [isSuccess, isValidResponse, quizzes]);
+
+  const observer = useRef<IntersectionObserver | null>(null);
+
+  const lastQuizElementRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (observer.current) observer.current.disconnect();
+
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && isValidResponse && page < quizzes.pagination.totalPage) {
+          setHasData(true);
+        } else {
+          setHasData(false);
+        }
+      });
+
+      if (node) observer.current.observe(node);
+    },
+    [page, quizzes]  // Add `page` and `quizzes` as dependencies
+  );
+
+  // Helper function to render quiz cards
+  const renderQuizCards = () => {
+    if (allQuizzes.length === 0) {
+      return <div>No quizzes available</div>;
+    }
+
+    return allQuizzes.map((quiz, index) => {
+      const isLastQuiz = index === allQuizzes.length - 1;
+      return (
+        <QuizCard
+          key={index}
+          quiz={quiz}
+          ref={isLastQuiz ? lastQuizElementRef : undefined}
+        />
+      );
+    });
+  };
+
+  // Determine element based on loading, error, or data state
+  const getElement = () => {
+    if (isLoading) {
+      return (
+        <>
+          <QuizCardLoader /> <QuizCardLoader /> <QuizCardLoader />
+        </>
+      );
+    }
+
+    if (isError) {
+      return <div>Error fetching quizzes</div>;
+    }
+
+    return renderQuizCards();
+  };
+
+  // Usage
+  const element = getElement();
+
   return (
     <>
       <div className="lg:col-span-2">
@@ -49,9 +97,8 @@ export default function QuizList() {
           Available Quizzes
         </h2>
         <div className="grid gap-6">
-          {quizzes.map((quiz) => (
-            <QuizCard key={quiz.id} quiz={quiz} />
-          ))}
+          {element}
+          {hasData && <><QuizCardLoader /> <QuizCardLoader /></>}
         </div>
       </div>
       <ParticipantsQuizModal />

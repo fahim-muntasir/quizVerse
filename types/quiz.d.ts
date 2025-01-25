@@ -11,16 +11,33 @@ export type Question = {
 
 export type Quiz = {
   id: string;
-  title: string;
-  description: string;
   category: string;
-  participants: number;
-  duration: string;
-  difficulty: QuizDifficulty;
+  description: string;
+  difficulty: "Easy" | "Medium" | "Hard";
+  duration: number;
+  questions: string[];
+  title: string;
   totalMarks: number;
-  admin: string;
-  activeStatus: boolean;
-  questions: Question[];
+  status: string;
+  user: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type QuizResponseType = {
+  code: number;
+  data: Quiz[];
+  links: {
+    self: string;
+  };
+  message: string;
+  pagination: {
+    page: number;
+    limit: number;
+    totalPage: number;
+    totalItems: number;
+  };
+  success: boolean;
 };
 
 type QuizResultData = {
@@ -39,4 +56,4 @@ type QuizResultData = {
     type: QuestionType;
     isCorrectAnswer: boolean;
   }[];
-}
+};
