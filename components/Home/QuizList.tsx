@@ -6,6 +6,7 @@ import { useGetQuizzesQuery } from "@/libs/features/quiz/quizApiSlice";
 import QuizCardLoader from "./QuizCardLoader";
 import { isQuizResponse } from "@/utils/typeGuards";
 import { Quiz } from "@/types/quiz";
+import Error from "../common/Error";
 
 export default function QuizList() {
   const [hasData, setHasData] = useState(false);
@@ -81,7 +82,7 @@ export default function QuizList() {
     }
 
     if (isError) {
-      return <div>Error fetching quizzes</div>;
+      return <Error msg="Error fetching quizzes" />;
     }
 
     return renderQuizCards();

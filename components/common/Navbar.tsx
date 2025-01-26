@@ -35,7 +35,7 @@ export function Navbar() {
                 Create Quiz
               </button>
               <Link
-                href="/auth"
+                href="/auth/signin"
                 className="flex items-center px-3 py-1 rounded-md border border-primary text-primary hover:bg-primary hover:text-white transition-colors"
               >
                 <LogIn className="w-4 h-4 mr-2" />

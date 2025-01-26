@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { UserPlus, Loader2 } from "lucide-react";
 import { Formik, Form, Field, ErrorMessage, FormikHelpers } from "formik";
@@ -7,21 +7,42 @@ import { SignUpFormValues } from "@/types/auth";
 import { signUpSchema } from "@/schemas";
 import Button from "../ui/Button";
 import FieldContainer from "../ui/FieldContainer";
+import { useSignUpMutation } from "@/libs/features/auth/authApiSlice";
+import { toast } from "react-hot-toast";
 
 export default function SignUp() {
+  const [signUp, { isError }] = useSignUpMutation();
+  const [errorToastShown, setErrorToastShown] = useState(false);
+
   const initialValues: SignUpFormValues = {
     fullName: "",
     email: "",
     password: "",
   };
 
-  const doSubmit = (
+  const doSubmit = async (
     values: SignUpFormValues,
     { setSubmitting }: FormikHelpers<SignUpFormValues>
   ) => {
-    console.log(values);
+    setErrorToastShown(false);
+    try {
+      await signUp(values).unwrap();
+
+      toast.success("Account created successfully!");
+
+      setTimeout(() => { window.location.href = "/auth/signin"; }, 2000);
+    } catch (error) {
+      console.error("Sign-up failed:", error);
+    }
     setSubmitting(false);
   };
+
+  useEffect(() => {
+    if (isError && !errorToastShown) {
+      toast.error("An error occurred. Please try again later.");
+      setErrorToastShown(true);
+    }
+  }, [isError, errorToastShown]);
 
   return (
     <div className="w-full p-8">
