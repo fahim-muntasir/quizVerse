@@ -7,19 +7,28 @@ import { SignInFormValues } from "@/types/auth";
 import { signInSchema } from "@/schemas";
 import Button from "../ui/Button";
 import FieldContainer from "../ui/FieldContainer";
+import { useSignInMutation } from "@/libs/features/auth/authApiSlice";
+import { toast } from "react-hot-toast";
 
 export default function SignIn() {
+  const [signIn] = useSignInMutation();
   const initialValues: SignInFormValues = {
     email: "",
     password: "",
   };
 
-  const doSubmit = (
+  const doSubmit = async (
     values: SignInFormValues,
     { setSubmitting }: FormikHelpers<SignInFormValues>
   ) => {
-    console.log(values);
-    setSubmitting(false);
+    try {
+      await signIn(values).unwrap();
+
+      toast.success("Sign-in successful!");
+      setSubmitting(false);
+    } catch (error) {
+      console.error("Sign-in failed:", error);
+    }
   };
 
   return (
