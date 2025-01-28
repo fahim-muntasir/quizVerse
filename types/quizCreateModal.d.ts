@@ -27,3 +27,5 @@ export type InitialValues = QuizDetails & {
     isUpdate?: boolean;
   };
 };
+
+export type CreateQuizType = Omit<InitialValues, "currentQuestion">;

@@ -86,7 +86,7 @@ export default function QuizModal() {
   const currentQuestion = selectedQuiz.questions[currentQuestionIndex];
 
   return (
-    <Modal onClose={onCloseHandler}>
+    <Modal>
       {/* Header */}
       <Header title={selectedQuiz.title} description={selectedQuiz.description} timeLeft={timeLeft} onClose={onCloseHandler} />
 

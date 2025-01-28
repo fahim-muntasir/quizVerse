@@ -9,10 +9,19 @@ import CreateQuizModal from "../CreateQuizModal";
 export function Navbar() {
   const dispatch = useAppDispatch();
   const isOpen = useAppSelector((state) => state.modal.createQuizModal.isOpen);
+  const user = useAppSelector((state) => state.auth.user);
 
   const createQuizHandler = () => {
     dispatch(openCreateQuizModal());
   };
+
+  const logoutHandler = () => {
+    localStorage.removeItem("auth");
+
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
+  }
 
   return (
     <>
@@ -27,20 +36,30 @@ export function Navbar() {
             </Link>
 
             <div className="flex items-center space-x-4">
-              <button
-                onClick={createQuizHandler}
-                className="flex items-center px-3 py-1 rounded-md border border-primary  bg-primary text-white hover:bg-primary-dark transition-colors"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Create Quiz
-              </button>
-              <Link
-                href="/auth/signin"
-                className="flex items-center px-3 py-1 rounded-md border border-primary text-primary hover:bg-primary hover:text-white transition-colors"
-              >
-                <LogIn className="w-4 h-4 mr-2" />
-                Sign In
-              </Link>
+              {user !== undefined ? (
+                user ? (
+                  <>
+                    <button
+                      onClick={createQuizHandler}
+                      className="flex items-center px-3 py-1 rounded-md border border-primary bg-primary text-white hover:bg-primary-dark transition-colors"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Quiz
+                    </button>
+                    <button onClick={logoutHandler} className="flex items-center px-3 py-1 rounded-md border border-red-500 bg-red-500 text-white hover:bg-red-600 transition-colors">
+                      <LogIn className="w-4 h-4 mr-2" />
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <Link href="/auth/signin" className="flex items-center px-3 py-1 rounded-md border border-primary bg-primary text-white hover:bg-primary-dark transition-colors">
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Login
+                  </Link>
+                )
+              ) : (
+                <div className="text-gray-500">Loading...</div>
+              )}
             </div>
           </div>
         </div>

@@ -8,22 +8,35 @@ type FooterProps = {
   step: number;
   setStep: (set: number) => void;
   isSubmitting: boolean;
+  onSubmit: (value: InitialValues) => void;
 };
 
 export default function Footer({
   step,
   setStep,
   isSubmitting,
+  onSubmit
 }: FooterProps) {
-  const { values, errors, touched } = useFormikContext<InitialValues>();
+  const { values, errors, touched, setSubmitting } = useFormikContext<InitialValues>();
 
   const requiredFieldsToGoToNext = ["title", "category", "description", "duration"];
 
   // Check if all required fields are valid
   const areFieldsValid = () =>
-    requiredFieldsToGoToNext.every((field) => 
+    requiredFieldsToGoToNext.every((field) =>
       !errors[field as keyof InitialValues] && (touched[field as keyof InitialValues] || values[field as keyof InitialValues])
     );
+
+  const createQuizHandler = async () => {
+    try {
+      setSubmitting(true); 
+      onSubmit(values);
+    } catch (error) {
+      console.error("Quiz creation failed:", error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="border-t border-gray-800 p-4 flex justify-between">
@@ -47,7 +60,7 @@ export default function Footer({
             <StepBack className="w-5 h-5 mr-1" /> Back
           </button>
           <Button
-            type="submit"
+            onHandler={createQuizHandler}
             isDisabled={values.questions.length === 0 || isSubmitting}
           >
             Create Quiz ({values.questions.length})

@@ -4,10 +4,9 @@ import { createPortal } from "react-dom";
 
 type ModalProps = {
   children: React.ReactNode;
-  onClose: () => void;
 };
 
-export default function Modal({ children, onClose}: ModalProps) {
+export default function Modal({ children}: ModalProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -30,7 +29,6 @@ export default function Modal({ children, onClose}: ModalProps) {
 
   return createPortal(
     <div
-      onClick={onClose}
       className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
     >
       <div

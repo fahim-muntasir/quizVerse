@@ -12,9 +12,12 @@ import { quizCreationSchema } from "@/schemas";
 import { useAppDispatch } from "@/libs/hooks";
 import { closeCreateQuizModal } from "@/libs/features/modal/modalSlice";
 import Header from "./Header";
+import { useCreateQuizMutation } from "@/libs/features/quiz/quizApiSlice";
+import { toast } from "react-hot-toast";
 
 export default function CreateQuizModal({ isOpen }: CreateQuizModalProps) {
   const [step, setStep] = useState(1);
+  const [createQuiz] = useCreateQuizMutation();
   const dispatch = useAppDispatch();
 
   const onCloseHandler = () => {
@@ -38,25 +41,42 @@ export default function CreateQuizModal({ isOpen }: CreateQuizModalProps) {
     },
   };
 
-  const doSubmit = (
+  const doSubmit = async (
     values: InitialValues,
     { setSubmitting }: FormikHelpers<InitialValues>
   ) => {
-    console.log(values);
-    setSubmitting(false);
+    try {
+      const requestBody = {
+        title: values.title,
+        description: values.description,
+        category: values.category,
+        difficulty: values.difficulty,
+        duration: values.duration,
+        questions: values.questions,
+        totalMarks: values.totalMarks,
+      }
+
+      await createQuiz(requestBody).unwrap();
+
+      onCloseHandler();
+      toast.success("Quiz created successfully!");
+      setSubmitting(false);
+    } catch (error) {
+      console.error("Quiz creation failed:", error);
+    }
   };
 
   if (!isOpen) return null;
 
   return (
-    <Modal onClose={onCloseHandler}>
+    <Modal>
       <Header onClose={onCloseHandler} title="Create New Quiz" />
       <Formik
         initialValues={initialValues}
         onSubmit={doSubmit}
         validationSchema={quizCreationSchema}
       >
-        {({ isSubmitting }) => (
+        {({ isSubmitting, ...rest }) => (
           <Form>
             {/* Progress Steps */}
             <ProgressBar step={step} />
@@ -73,7 +93,7 @@ export default function CreateQuizModal({ isOpen }: CreateQuizModalProps) {
             </div>
 
             {/* Footer */}
-            <Footer step={step} setStep={setStep} isSubmitting={isSubmitting} />
+            <Footer step={step} setStep={setStep} isSubmitting={isSubmitting} onSubmit={(values) => doSubmit(values, { ...rest})} />
           </Form>
         )}
       </Formik>
