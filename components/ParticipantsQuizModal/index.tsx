@@ -9,9 +9,13 @@ import ProgressBar from './ProgressBar';
 import QuestionOption from '../common/QuizOption';
 import Footer from './Footer';
 import Question from '../common/Question';
+import { isQuiz } from '@/utils/typeGuards';
+import { useCreateResultMutation } from '@/libs/features/result/resultApiSlice';
+import SubmissionSuccess from './SubmissionSuccess';
 
 export default function QuizModal() {
   const dispatch = useAppDispatch()
+  const [createResult, { isSuccess }] = useCreateResultMutation();
   const selectedQuiz = useAppSelector(state => state.participantQuiz.selectedQuiz);
   const isOpen = useAppSelector(
     (state) => state.modal.participateQuizModal.isOpen
@@ -20,33 +24,38 @@ export default function QuizModal() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string[]>>({});
   const [timeLeft, setTimeLeft] = useState(0);
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (isSuccess) {
+      setQuizSubmitted(true)
+    }
+  }, [isSuccess])
 
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 0) {
-          clearInterval(timer);
-          handleSubmit();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+  useEffect(() => {
+    if (selectedQuiz && isQuiz(selectedQuiz)) {
+      setTimeLeft(selectedQuiz.duration * 60); // Assuming duration is in minutes, convert to seconds
+    }
+  }, [selectedQuiz]);
 
-    return () => clearInterval(timer);
-  }, [isOpen]);
-
-  // Early return to avoid rendering the modal if conditions aren't met
-  if (!isOpen || !selectedQuiz || !selectedQuiz.questions || selectedQuiz.questions.length === 0) {
-    return null;
-  }
+  useEffect(() => {
+    if (timeLeft > 0) {
+      const timer = setInterval(() => {
+        setTimeLeft(prevTime => prevTime - 1);
+      }, 1000);
+  
+      return () => clearInterval(timer);
+    }
+  }, [timeLeft]);
 
   const onCloseHandler = () => {
     dispatch(closeParticipateQuizModal());
     dispatch(onSelectQuiz(null))
+  }
+
+  if (!isOpen || !isQuiz(selectedQuiz)) {
+    return null; // Ensures the modal doesn't render if the quiz is invalid
   }
 
   const handleAnswerSelect = (questionId: string, optionIndex: string) => {
@@ -76,36 +85,50 @@ export default function QuizModal() {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    // Submit logic here
+
+    const takenTime = Math.floor(selectedQuiz.duration * 60) - timeLeft;
+
+    await createResult({
+      selectedAnswers,
+      quizId: selectedQuiz._id,
+      takenTime
+    })
+
     setIsSubmitting(false);
     // onClose();
   };
-
-  // if (!isOpen ) return null;
 
   const currentQuestion = selectedQuiz.questions[currentQuestionIndex];
 
   return (
     <Modal>
       {/* Header */}
-      <Header title={selectedQuiz.title} description={selectedQuiz.description} timeLeft={timeLeft} onClose={onCloseHandler} />
+      <Header title={selectedQuiz.title} description={selectedQuiz.description} timeLeft={timeLeft} onClose={onCloseHandler} isQuizSubmitted={quizSubmitted} />
 
-      {/* Progress */}
-      <ProgressBar currentQuestionIndex={currentQuestionIndex} questionLength={selectedQuiz.questions.length} />
-
-      {/* Question */}
-      <div className="p-6">
-        <Question currentQuestionIndex={currentQuestionIndex} marks={currentQuestion.points} type={currentQuestion.type} text={currentQuestion.text} />
-
-        <div className="space-y-3">
-          {currentQuestion.options.map((option, index) => (
-            <QuestionOption key={index} onClickHandler={() => handleAnswerSelect(currentQuestion.id, index.toString())} selectedAnswers={selectedAnswers[currentQuestion.id]} questionType={currentQuestion.type} option={option} index={index.toString()} />
-          ))}
+      {quizSubmitted && (
+        <div className='p-5'>
+          <SubmissionSuccess onClose={onCloseHandler} />
         </div>
-      </div>
+      )}
 
-      {/* Footer */}
-      <Footer questionType={currentQuestion.type} currentQuestionIndex={currentQuestionIndex} selectedQuizQuestionLength={selectedQuiz.questions.length} selectedAnswers={selectedAnswers[currentQuestion.id]} handleNext={handleNext} handleSubmit={handleSubmit} isSubmitting={isSubmitting} />
+      {!quizSubmitted &&
+        <>{/* Progress */}
+          <ProgressBar currentQuestionIndex={currentQuestionIndex} questionLength={selectedQuiz.questions.length} />
+
+          {/* Question */}
+          <div className="p-6">
+            <Question currentQuestionIndex={currentQuestionIndex} marks={currentQuestion.marks} type={currentQuestion.type} text={currentQuestion.text} />
+
+            <div className="space-y-3">
+              {currentQuestion.options.map((option, index) => (
+                <QuestionOption key={index} onClickHandler={() => handleAnswerSelect(currentQuestion._id, index.toString())} selectedAnswers={selectedAnswers[currentQuestion._id]} questionType={currentQuestion.type} option={option} index={index.toString()} />
+              ))}
+            </div>
+          </div>
+
+          {/* Footer */}
+          <Footer questionType={currentQuestion.type} currentQuestionIndex={currentQuestionIndex} selectedQuizQuestionLength={selectedQuiz.questions.length} selectedAnswers={selectedAnswers[currentQuestion._id]} handleNext={handleNext} handleSubmit={handleSubmit} isSubmitting={isSubmitting} />
+        </>}
     </Modal>
   );
 }

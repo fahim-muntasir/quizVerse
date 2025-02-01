@@ -2,7 +2,29 @@ import { Quiz, QuizResponseType } from "@/types/quiz";
 import { AuthResponse } from "@/types/auth";
 
 // Type guard for a single Quiz object
-const isQuiz = (quiz: unknown): quiz is Quiz => {
+// export const isQuiz = (quiz: unknown): quiz is Quiz => {
+//   if (typeof quiz !== "object" || quiz === null) return false;
+
+//   const q = quiz as Record<string, unknown>;
+
+//   return (
+//     typeof q.category === "string" &&
+//     typeof q.createdAt === "string" &&
+//     typeof q.description === "string" &&
+//     (q.difficulty === "Easy" || q.difficulty === "Medium" || q.difficulty === "Hard") &&
+//     typeof q.duration === "number" &&
+//     Array.isArray(q.questions) &&
+//     q.questions.every((question) => typeof question === "string") &&
+//     typeof q.title === "string" &&
+//     typeof q.totalMarks === "number" &&
+//     typeof q.status === "string" &&
+//     typeof q.updatedAt === "string" &&
+//     typeof q.user === "string" &&
+//     typeof q._id === "string"
+//   );
+// };
+
+export const isQuiz = (quiz: unknown): quiz is Quiz => {
   if (typeof quiz !== "object" || quiz === null) return false;
 
   const q = quiz as Record<string, unknown>;
@@ -14,15 +36,30 @@ const isQuiz = (quiz: unknown): quiz is Quiz => {
     (q.difficulty === "Easy" || q.difficulty === "Medium" || q.difficulty === "Hard") &&
     typeof q.duration === "number" &&
     Array.isArray(q.questions) &&
-    q.questions.every((question) => typeof question === "string") &&
+    q.questions.every((question) =>
+      typeof question === "object" &&
+      question !== null &&
+      typeof question._id === "string" &&
+      typeof question.text === "string" &&
+      typeof question.type === "string" &&
+      Array.isArray(question.options) &&
+      question.options.every((opt: unknown) => typeof opt === "string") &&
+      typeof question.marks === "number" &&
+      typeof question.updatedAt === "string" &&
+      typeof question.createdAt === "string" &&
+      Array.isArray(question.correctAnswer) &&
+      question.correctAnswer.every((opt: unknown) => typeof opt === "string") &&
+      typeof question.quizId === "string" // This should be inside the question, not the quiz
+    ) &&
     typeof q.title === "string" &&
     typeof q.totalMarks === "number" &&
-    typeof q.status === "string" &&
+    typeof q.status === "string" && // Could use a stricter enum check
     typeof q.updatedAt === "string" &&
     typeof q.user === "string" &&
     typeof q._id === "string"
   );
 };
+
 
 // Type guard for QuizResponse
 export const isQuizResponse = (data: unknown): data is QuizResponseType => {

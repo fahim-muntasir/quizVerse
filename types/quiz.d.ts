@@ -2,20 +2,24 @@ type QuizDifficulty = "Easy" | "Medium" | "Hard";
 type QuestionType = "single" | "multiple";
 
 export type Question = {
-  id: string;
+  _id: string;
   text: string;
   options: string[];
+  correctAnswer: string[];
   type: QuestionType;
-  points: number;
+  marks: number;
+  quizId: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type Quiz = {
-  id: string;
+  _id: string;
   category: string;
   description: string;
   difficulty: "Easy" | "Medium" | "Hard";
   duration: number;
-  questions: string[];
+  questions: Question[];
   title: string;
   totalMarks: number;
   status: string;
