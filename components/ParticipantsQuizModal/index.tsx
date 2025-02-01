@@ -12,6 +12,7 @@ import Question from '../common/Question';
 import { isQuiz } from '@/utils/typeGuards';
 import { useCreateResultMutation } from '@/libs/features/result/resultApiSlice';
 import SubmissionSuccess from './SubmissionSuccess';
+import toast from 'react-hot-toast';
 
 export default function QuizModal() {
   const dispatch = useAppDispatch()
@@ -44,14 +45,16 @@ export default function QuizModal() {
       const timer = setInterval(() => {
         setTimeLeft(prevTime => prevTime - 1);
       }, 1000);
-  
+
       return () => clearInterval(timer);
     }
   }, [timeLeft]);
 
   const onCloseHandler = () => {
     dispatch(closeParticipateQuizModal());
-    dispatch(onSelectQuiz(null))
+    dispatch(onSelectQuiz(null));
+    setQuizSubmitted(false);
+    setSelectedAnswers({});
   }
 
   if (!isOpen || !isQuiz(selectedQuiz)) {
@@ -86,16 +89,20 @@ export default function QuizModal() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
 
-    const takenTime = Math.floor(selectedQuiz.duration * 60) - timeLeft;
+    try {
+      const takenTime = Math.floor(selectedQuiz.duration * 60) - timeLeft;
 
-    await createResult({
-      selectedAnswers,
-      quizId: selectedQuiz._id,
-      takenTime
-    })
+      await createResult({
+        selectedAnswers,
+        quizId: selectedQuiz._id,
+        takenTime
+      })
+    } catch (error) {
+      console.log(error);
+      toast.error("Something went wrong!");
+    }
 
     setIsSubmitting(false);
-    // onClose();
   };
 
   const currentQuestion = selectedQuiz.questions[currentQuestionIndex];

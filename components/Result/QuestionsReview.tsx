@@ -1,55 +1,69 @@
 import React from 'react'
-import { QuizResultData } from '@/types/quiz';
 import Question from '../common/Question';
-import Explanation from './Explanation';
+// import Explanation from './Explanation';
 import ResultOption from '../common/ResultOption';
+import { useParams } from 'next/navigation';
+import { useGetResultByQuizIdQuery } from '@/libs/features/result/resultApiSlice';
+import { isQuizResultResponse } from '@/utils/typeGuardsForResult';
+import Error from '../common/Error';
+import LoadingSpinner from '../LoadingSpinner';
 
 export default function QuestionsReview() {
-  const result: QuizResultData = {
-    quizTitle: "JavaScript Fundamentals",
-    score: 85,
-    totalQuestions: 10,
-    correctAnswers: 8,
-    timeTaken: "25:30",
-    questions: [
-      {
-        id: "1",
-        text: "What is the capital of France?",
-        userAnswer: ["1"],
-        correctAnswer: ["2"],
-        options: ["London", "Berlin", "Paris", "Madrid"],
-        explanation: "Paris is the capital city of France.",
-        type: "single",
-        isCorrectAnswer: false,
-      },
-      {
-        id: "2",
-        text: "Select all programming languages",
-        userAnswer: ["0", "1", "3"],
-        correctAnswer: ["0", "1", "3"],
-        options: ["Python", "JavaScript", "Banana", "Java"],
-        explanation: "Python, JavaScript, and Java are programming languages, while Banana is a fruit.",
-        type: "multiple",
-        isCorrectAnswer: true,
-      }
-    ]
-  };
+  const { id } = useParams();
+  const quizId = typeof id === "string" ? id : "";
+
+  const { data, isLoading, isError } = useGetResultByQuizIdQuery(quizId);
+
+  if (isError) {
+    return <Error msg='Failed to fetch quiz result.' />;
+  }
+
+  // Type guard check
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  const isValidResponse = data && isQuizResultResponse(data);
+
+  if (!isValidResponse) {
+    return <Error msg='Invalid respnse!' />
+  }
+
+  const response = isValidResponse && data.data;
 
   return (
     <div className="space-y-6">
-      {result.questions.map((question, index) => (
-        <div key={question.id} className="bg-background backdrop-blur-lg rounded-lg p-6 border border-gray-800">
-          <Question currentQuestionIndex={index} marks={50} type={question.type} text={question.text} isCorrectAnswer={question.isCorrectAnswer} />
+      {response.results.map((result, index) => (
+        <div
+          key={result.question._id}
+          className="bg-background backdrop-blur-lg rounded-lg p-6 border border-gray-800"
+        >
+          <Question
+            currentQuestionIndex={index}
+            marks={result.question.marks}
+            type={result.question.type}
+            text={result.question.text}
+            isCorrectAnswer={result.isCorrectAnswer}
+            isLabel={true}
+          />
 
           <div className="space-y-3">
-            {question.options.map((option, optionIndex) => (
-              <ResultOption key={optionIndex} index={optionIndex.toString()} selectedAnswers={question.userAnswer} questionType={question.type} option={option} correctAnswer={question.correctAnswer} />
+            {result.question.options.map((option, optionIndex) => (
+              <ResultOption
+                key={optionIndex}
+                index={optionIndex.toString()}
+                selectedAnswers={response.selectedAnswers[result.question._id]}
+                questionType={result.question.type}
+                option={option}
+                correctAnswer={result.question.correctAnswer}
+              />
             ))}
           </div>
 
-          {question.explanation && (
-            <Explanation text={question.explanation} />
-          )}
+          {/* Uncomment if explanation feature is needed */}
+          {/* {result.question.explanation && (
+        <Explanation text={result.question.explanation} />
+      )} */}
         </div>
       ))}
     </div>

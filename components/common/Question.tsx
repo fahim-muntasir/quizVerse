@@ -45,9 +45,9 @@ export default function Question({
           )}
         </div>
         
-        {/* Points */}
+        {/* Marks */}
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-400">Points:</span>
+          <span className="text-sm text-gray-400">Marks:</span>
           <span className="text-sm font-medium text-green-500">{marks}</span>
         </div>
       </div>

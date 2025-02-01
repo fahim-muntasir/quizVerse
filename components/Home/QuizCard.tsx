@@ -222,7 +222,7 @@ type QuizCardProps = { quiz: Quiz };
 export const QuizCard = forwardRef<HTMLDivElement, QuizCardProps>(
   ({ quiz }, ref) => {
     const {
-      id,
+      _id,
       title,
       description,
       category,
@@ -247,7 +247,7 @@ export const QuizCard = forwardRef<HTMLDivElement, QuizCardProps>(
     }[difficulty];
 
     const handleShare = (platform: "copy" | "twitter" | "facebook") => {
-      const quizUrl = `${window.location.origin}/quiz/${id}`;
+      const quizUrl = `${window.location.origin}/quiz/${_id}`;
 
       switch (platform) {
         case "copy":
@@ -273,7 +273,7 @@ export const QuizCard = forwardRef<HTMLDivElement, QuizCardProps>(
 
     const handleDelete = () => {
       if (window.confirm("Are you sure you want to delete this quiz?")) {
-        console.log("Delete quiz:", id);
+        console.log("Delete quiz:", _id);
       }
     };
 
@@ -376,7 +376,7 @@ export const QuizCard = forwardRef<HTMLDivElement, QuizCardProps>(
 
           <div className="flex items-center gap-4">
             <Link
-              href={`/quiz/${id}/results`}
+              href={`/quiz/${_id}/results`}
               className="flex items-center text-green-500 hover:text-green-400 transition-colors"
             >
               View Results
