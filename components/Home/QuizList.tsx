@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import { QuizCard } from "./QuizCard";
+import { QuizCard } from "./QuizCard/QuizCard";
 import ParticipantsQuizModal from "@/components/ParticipantsQuizModal";
 import { useGetQuizzesQuery } from "@/libs/features/quiz/quizApiSlice";
 import QuizCardLoader from "./QuizCardLoader";
@@ -12,7 +12,6 @@ export default function QuizList() {
   const [hasData, setHasData] = useState(false);
   const [page, setPage] = useState(1);
   const [allQuizzes, setAllQuizzes] = useState<Quiz[]>([]);
-
   // Fetch data using RTK Query
   const { data: quizzes, isLoading, isError, isSuccess } = useGetQuizzesQuery({
     page,
@@ -30,7 +29,13 @@ export default function QuizList() {
 
   useEffect(() => {
     if (isSuccess && isValidResponse) {
-      setAllQuizzes((prevQuizzes) => [...prevQuizzes, ...quizzes.data]);
+      setAllQuizzes((prevQuizzes) => {
+        // Filter out quizzes that are already present
+        const newQuizzes = quizzes.data.filter(
+          (newQuiz) => !prevQuizzes.some((prevQuiz) => prevQuiz._id === newQuiz._id)
+        );
+        return [...prevQuizzes, ...newQuizzes];
+      });
     }
   }, [isSuccess, isValidResponse, quizzes]);
 

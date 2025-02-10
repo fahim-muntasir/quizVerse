@@ -34,6 +34,7 @@ export const apiSlice = createApi({
 
     return result;
   },
-  tagTypes: ["Quiz"],
+  tagTypes: ["Quiz", "CheckParticipants"],
   endpoints: () => ({}),
+  keepUnusedDataFor: 300,
 });

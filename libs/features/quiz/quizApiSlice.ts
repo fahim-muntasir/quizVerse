@@ -19,7 +19,7 @@ export const quizApiSlice = apiSlice.injectEndpoints({
           limit: limit ?? 10,
         })}`;
       },
-      providesTags: ["Quiz"],
+      providesTags: (result, error, { page }) => [{ type: "Quiz", id: page }],
     }),
     createQuiz: builder.mutation<unknown, CreateQuizType>({
       query: (body) => ({
@@ -27,7 +27,7 @@ export const quizApiSlice = apiSlice.injectEndpoints({
         method: "POST",
         body: { ...body },
       }),
-      invalidatesTags: ["Quiz"],
+      invalidatesTags: [{ type: "Quiz" }, { type: "CheckParticipants" }],
     }),
   }),
 });

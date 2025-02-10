@@ -1,6 +1,6 @@
 import { Quiz, QuizResponseType } from "@/types/quiz";
 import { AuthResponse } from "@/types/auth";
-
+import { ParticipantResponseType } from "@/types/participants";
 // Type guard for a single Quiz object
 // export const isQuiz = (quiz: unknown): quiz is Quiz => {
 //   if (typeof quiz !== "object" || quiz === null) return false;
@@ -106,3 +106,20 @@ export function isAuthResponse(response: unknown): response is AuthResponse {
     typeof (response as Record<string, unknown>).success === "boolean"
   );
 }
+
+export const isParticipantResponse = (data: unknown): data is ParticipantResponseType => {
+  if (typeof data !== "object" || data === null) return false;
+
+  const obj = data as Record<string, unknown>;
+  const dataField = obj.data as Record<string, unknown> | null;
+
+  return (
+    typeof obj.success === "boolean" &&
+    typeof obj.message === "string" &&
+    typeof obj.code === "number" &&
+    typeof dataField === "object" &&
+    dataField !== null &&
+    typeof dataField.hasParticipated === "boolean" &&
+    typeof dataField._id === "string"
+  );
+};
