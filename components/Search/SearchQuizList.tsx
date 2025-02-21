@@ -1,55 +1,58 @@
 "use client";
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import { QuizCard } from "./QuizCard/QuizCard";
+import { useSearchParams } from "next/navigation";
+import { QuizCard } from "../Home/QuizCard/QuizCard";
 import ParticipantsQuizModal from "@/components/ParticipantsQuizModal";
 import { useGetQuizzesQuery } from "@/libs/features/quiz/quizApiSlice";
-import QuizCardLoader from "./QuizCardLoader";
+import QuizCardLoader from "../Home/QuizCardLoader";
 import { isQuizResponse } from "@/utils/typeGuards";
 import { Quiz } from "@/types/quiz";
 import Error from "../common/Error";
-// import { useAppSelector } from "@/libs/hooks";
 
-export default function QuizList() {
+export default function SearchQuizList() {
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get("q") || ""; // Get search query from URL
+
   const [hasData, setHasData] = useState(false);
   const [page, setPage] = useState(1);
   const [allQuizzes, setAllQuizzes] = useState<Quiz[]>([]);
-  // const { searchQuery } = useAppSelector((state) => state.filter);
+
+  console.log("Search Query:", searchQuery);
 
   // Fetch data using RTK Query
   const { data: quizzes, isLoading, isError, isSuccess } = useGetQuizzesQuery({
     page,
-    limit: 10
+    limit: 10,
+    searchQuery,
   });
 
-  console.log("quizzes==", quizzes);
-
-  // Validate the type of quizzes using the type guard
+  // Validate API response type
   const isValidResponse = quizzes && isQuizResponse(quizzes);
 
+  // Reset quizzes when search query changes
   useEffect(() => {
-    if (hasData) {
-      setPage((prevPage) => prevPage + 1);
-    }
-  }, [hasData]);
+    setPage(1); // Reset pagination
+    setAllQuizzes([]); // Clear previous results
+  }, [searchQuery]);
 
+  // Append new quizzes when API fetch is successful
   useEffect(() => {
     if (isSuccess && isValidResponse) {
       setAllQuizzes((prevQuizzes) => {
-        // Append new quizzes for infinite scrolling
+        if (page === 1) return quizzes.data; // Replace for new search
         const newQuizzes = quizzes.data.filter(
           (newQuiz) => !prevQuizzes.some((prevQuiz) => prevQuiz._id === newQuiz._id)
         );
-        return [...prevQuizzes, ...newQuizzes];
+        return [...prevQuizzes, ...newQuizzes]; // Append for infinite scroll
       });
     }
-  }, [isSuccess, isValidResponse, quizzes]);
+  }, [isSuccess, isValidResponse, quizzes, page]);
 
+  // Infinite Scroll Intersection Observer
   const observer = useRef<IntersectionObserver | null>(null);
-
   const lastQuizElementRef = useCallback(
     (node: HTMLDivElement | null) => {
       if (observer.current) observer.current.disconnect();
-
       observer.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && isValidResponse && page < quizzes.pagination.totalPage) {
           setHasData(true);
@@ -57,59 +60,33 @@ export default function QuizList() {
           setHasData(false);
         }
       });
-
       if (node) observer.current.observe(node);
     },
-    [page, quizzes]  // Add `page` and `quizzes` as dependencies
+    [page, quizzes]
   );
 
-  // Helper function to render quiz cards
+  // Render Quiz Cards
   const renderQuizCards = () => {
-    if (allQuizzes.length === 0) {
-      return <div>No quizzes available</div>;
+    if (allQuizzes.length === 0 && !isLoading) {
+      return <div className="text-white">No quizzes available</div>;
     }
-
-    return allQuizzes.map((quiz, index) => {
-      const isLastQuiz = index === allQuizzes.length - 1;
-      return (
-        <QuizCard
-          key={index}
-          quiz={quiz}
-          ref={isLastQuiz ? lastQuizElementRef : undefined}
-        />
-      );
-    });
+    return allQuizzes.map((quiz, index) => (
+      <QuizCard
+        key={quiz._id} // Use _id for uniqueness
+        quiz={quiz}
+        ref={index === allQuizzes.length - 1 ? lastQuizElementRef : undefined}
+      />
+    ));
   };
-
-  // Determine element based on loading, error, or data state
-  const getElement = () => {
-    if (isLoading) {
-      return (
-        <>
-          <QuizCardLoader /> <QuizCardLoader /> <QuizCardLoader />
-        </>
-      );
-    }
-
-    if (isError) {
-      return <Error msg="Error fetching quizzes" />;
-    }
-
-    return renderQuizCards();
-  };
-
-  // Usage
-  const element = getElement();
 
   return (
     <>
       <div className="lg:col-span-2">
-        <h2 className="text-2xl font-semibold text-white mb-6">
-          Available Quizzes
-        </h2>
+        <h2 className="text-2xl font-semibold text-white mb-6">Available Quizzes</h2>
         <div className="grid gap-6">
-          {element}
+          {isLoading ? <><QuizCardLoader /> <QuizCardLoader /> <QuizCardLoader /></> : renderQuizCards()}
           {hasData && <><QuizCardLoader /> <QuizCardLoader /></>}
+          {isError && <Error msg="Error fetching quizzes" />}
         </div>
       </div>
       <ParticipantsQuizModal />

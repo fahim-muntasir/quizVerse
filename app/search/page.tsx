@@ -3,7 +3,8 @@ import { SearchAndFilter } from "@/components/Home/SearchAndFilter/SearchAndFilt
 import Hero from "@/components/Home/Hero";
 import { BackgroundPattern } from "@/components/background/BackgroundPattern";
 import TopParticipants from "@/components/Home/TopParticipants";
-import QuizList from "@/components/Home/QuizList";
+// import QuizList from "@/components/Home/QuizList";
+import SearchQuizList from "@/components/Search/SearchQuizList";
 
 // Mock data for top participants by category
 const topParticipantsByCategory = {
@@ -39,7 +40,7 @@ export default function Home() {
           <SearchAndFilter />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <QuizList />
+            <SearchQuizList />
 
             <div className="lg:col-span-1">
               <TopParticipants categories={topParticipantsByCategory} />

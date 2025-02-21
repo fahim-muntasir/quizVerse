@@ -12,11 +12,12 @@ const generateQuery = (params: Record<string, number | string>) => {
 
 export const quizApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    getQuizzes: builder.query<unknown, { page?: number; limit?: number }>({
-      query: ({ page, limit }) => {
+    getQuizzes: builder.query<unknown, { page?: number; limit?: number; searchQuery?: string }>({
+      query: ({ page, limit, searchQuery }) => {
         return `/quizzes?${generateQuery({
           page: page ?? 1,
           limit: limit ?? 10,
+          search: searchQuery ?? "",
         })}`;
       },
       providesTags: (result, error, { page }) => [{ type: "Quiz", id: page }],

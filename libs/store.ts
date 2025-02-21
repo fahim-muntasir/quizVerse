@@ -2,6 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import modalReducer from "@/libs/features/modal/modalSlice";
 import participantQuizReducer from "@/libs/features/participantQuiz/participantQuizSlice";
 import authSliceReducer from "@/libs/features/auth/authSlice";
+import filterSliceReducer from "@/libs/features/filter/filterSlice";
 import { apiSlice } from "./features/api/apiSlice";
 
 export const makeStore = () => {
@@ -10,6 +11,7 @@ export const makeStore = () => {
       modal: modalReducer,
       participantQuiz: participantQuizReducer,
       auth: authSliceReducer,
+      filter: filterSliceReducer,
       [apiSlice.reducerPath]: apiSlice.reducer,
     },
     middleware: (getDefaultMiddleware) => {
