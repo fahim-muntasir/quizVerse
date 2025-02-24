@@ -5,10 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import useDebounce from "@/hooks/useDebounce";
 import { useAppDispatch } from "@/libs/hooks";
 import { search } from "@/libs/features/filter/filterSlice";
-import { useGetQuizzesQuery } from "@/libs/features/quiz/quizApiSlice";
 import { isQuizResponse } from "@/utils/typeGuards";
 import { Quiz } from "@/types/quiz";
 import SearchSkeleton from "./SearchSkeleton";
+import { useSearchHandlerQuery } from "@/libs/features/filter/filterApiSlice";
 
 export default function SearchBox() {
   const router = useRouter();
@@ -22,9 +22,8 @@ export default function SearchBox() {
   const debouncedQuery = useDebounce<string>(query, 500);
 
   // Fetch quizzes using RTK Query
-  const { data: quizzes, isLoading, isError, isSuccess } = useGetQuizzesQuery(
-    { limit: 10, searchQuery: debouncedQuery },
-    { skip: !debouncedQuery }
+  const { data: quizzes, isLoading, isError, isSuccess } = useSearchHandlerQuery(
+    { limit: 10, searchQuery: debouncedQuery }, { refetchOnMountOrArgChange: true }
   );
 
   const isValidResponse = quizzes && isQuizResponse(quizzes);
@@ -46,23 +45,35 @@ export default function SearchBox() {
   }, [query]);
 
   const handleSelect = (selectedQuery: string) => {
+    const currentParams = new URLSearchParams(searchParams.toString());
+    currentParams.set("q", selectedQuery); // Update only the search query
+  
     setQuery(selectedQuery);
     dispatch(search(selectedQuery));
-    router.push(`search?q=${encodeURIComponent(selectedQuery)}`);
+    router.push(`search?${currentParams.toString()}`);
     setShowDropdown(false);
   };
 
+  const onBlurHandler = () => {
+    setTimeout(() => {
+      setShowDropdown(false);
+      setResults([]);
+      setQuery("");
+    }
+      , 200);
+  }
+
   return (
-    <div className="lg:col-span-2 relative">
+    <div className="lg:col-span-2 w-full md:w-2/4 m-auto relative">
       <form onSubmit={(e) => { e.preventDefault(); handleSelect(query); }} className="relative">
         <input
           type="text"
           placeholder="Search quizzes..."
           value={query}
           onFocus={() => setShowDropdown(true)}
-          onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+          onBlur={onBlurHandler}
           onChange={(e) => setQuery(e.target.value)}
-          className="w-full bg-[#343434] border border-[#525252] rounded-md py-2 pl-10 pr-4 text-white placeholder-gray-400 focus:outline-none focus:border-green-500"
+          className="w-full bg-background border border-[#525252] rounded-md py-2 pl-10 pr-4 text-white placeholder-gray-400 focus:outline-none focus:border-green-500"
         />
         <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
 

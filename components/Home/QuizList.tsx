@@ -7,18 +7,16 @@ import QuizCardLoader from "./QuizCardLoader";
 import { isQuizResponse } from "@/utils/typeGuards";
 import { Quiz } from "@/types/quiz";
 import Error from "../common/Error";
-// import { useAppSelector } from "@/libs/hooks";
 
 export default function QuizList() {
   const [hasData, setHasData] = useState(false);
   const [page, setPage] = useState(1);
   const [allQuizzes, setAllQuizzes] = useState<Quiz[]>([]);
-  // const { searchQuery } = useAppSelector((state) => state.filter);
-
+  
   // Fetch data using RTK Query
   const { data: quizzes, isLoading, isError, isSuccess } = useGetQuizzesQuery({
     page,
-    limit: 10
+    limit: 10,
   });
 
   console.log("quizzes==", quizzes);

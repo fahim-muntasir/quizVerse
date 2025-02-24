@@ -21,39 +21,48 @@ export function Navbar() {
     setTimeout(() => {
       window.location.reload();
     }, 1000);
-  }
+  };
 
   return (
     <>
       <nav className="bg-[#1C1C1C] border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
+            {/* Logo */}
             <Link href="/" className="flex items-center space-x-2">
               <div className="bg-green-500/10 p-2 rounded-full">
                 <BookOpenCheck className="w-6 h-6 text-green-500" />
               </div>
-              <span className="text-white font-bold text-xl">QuizVerse</span>
+              <span className="text-white font-semibold text-lg">QuizVerse</span>
             </Link>
 
-            <div className="flex items-center space-x-4">
+            {/* Buttons */}
+            <div className="flex items-center space-x-3">
               {user !== undefined ? (
                 user ? (
                   <>
                     <button
                       onClick={createQuizHandler}
-                      className="flex items-center px-3 py-1 rounded-md border border-primary bg-primary text-white hover:bg-primary-dark transition-colors"
+                      className="flex items-center gap-2 px-3 py-2 rounded-md border border-[#525252] text-white hover:border-white transition duration-200"
                     >
-                      <Plus className="w-4 h-4 mr-2" />
+                      <Plus className="w-4 h-4" />
                       Create Quiz
                     </button>
-                    <button onClick={logoutHandler} className="flex items-center px-3 py-1 rounded-md border border-red-500 bg-red-500 text-white hover:bg-red-600 transition-colors">
-                      <LogIn className="w-4 h-4 mr-2" />
+
+                    <button
+                      onClick={logoutHandler}
+                      className="flex items-center gap-2 px-4 py-2 rounded-md border border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition duration-200"
+                    >
+                      <LogIn className="w-4 h-4" />
                       Logout
                     </button>
                   </>
                 ) : (
-                  <Link href="/auth/signin" className="flex items-center px-3 py-1 rounded-md border border-primary bg-primary text-white hover:bg-primary-dark transition-colors">
-                    <LogIn className="w-4 h-4 mr-2" />
+                  <Link
+                    href="/auth/signin"
+                    className="flex items-center gap-2 px-4 py-2 rounded-md border border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white transition duration-200"
+                  >
+                    <LogIn className="w-4 h-4" />
                     Login
                   </Link>
                 )

@@ -12,12 +12,25 @@ const generateQuery = (params: Record<string, number | string>) => {
 
 export const quizApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    getQuizzes: builder.query<unknown, { page?: number; limit?: number; searchQuery?: string }>({
-      query: ({ page, limit, searchQuery }) => {
+    getQuizzes: builder.query<
+      unknown,
+      {
+        page?: number;
+        limit?: number;
+        searchQuery?: string;
+        category?: string;
+        difficulty?: string;
+        duration?: string;
+      }
+    >({
+      query: ({ page, limit, searchQuery, category, difficulty, duration }) => {
         return `/quizzes?${generateQuery({
           page: page ?? 1,
           limit: limit ?? 10,
           search: searchQuery ?? "",
+          category: category ?? "",
+          difficulty: difficulty ?? "",
+          duration: duration ?? 1,
         })}`;
       },
       providesTags: (result, error, { page }) => [{ type: "Quiz", id: page }],

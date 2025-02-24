@@ -12,7 +12,10 @@ import Error from "../common/Error";
 export default function SearchQuizList() {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("q") || ""; // Get search query from URL
-
+  const category = searchParams.get("category") || "";
+  const difficulty = searchParams.get("difficulty") || "";
+  const duration = searchParams.get("duration") || "";
+  
   const [hasData, setHasData] = useState(false);
   const [page, setPage] = useState(1);
   const [allQuizzes, setAllQuizzes] = useState<Quiz[]>([]);
@@ -24,6 +27,9 @@ export default function SearchQuizList() {
     page,
     limit: 10,
     searchQuery,
+    category,
+    difficulty,
+    duration,
   });
 
   // Validate API response type
