@@ -12,8 +12,16 @@ export const resultApiSlice = apiSlice.injectEndpoints({
         method: "POST",
         body: { ...body },
       }),
+      invalidatesTags: (result, error, res) => {
+        const quizId = res.quizId;
+        return [
+          { type: "Quiz" },
+          { type: "CheckParticipants", id: quizId },
+        ]
+      },
     }),
   }),
 });
 
-export const { useCreateResultMutation, useGetResultByQuizIdQuery } = resultApiSlice;
+export const { useCreateResultMutation, useGetResultByQuizIdQuery } =
+  resultApiSlice;

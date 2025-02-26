@@ -55,6 +55,7 @@ export default function QuizModal() {
     dispatch(onSelectQuiz(null));
     setQuizSubmitted(false);
     setSelectedAnswers({});
+    setCurrentQuestionIndex(0);
   }
 
   if (!isOpen || !isQuiz(selectedQuiz)) {
