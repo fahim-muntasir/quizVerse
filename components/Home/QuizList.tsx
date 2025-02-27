@@ -103,7 +103,7 @@ export default function QuizList() {
     <>
       <div className="lg:col-span-2">
         <h2 className="text-2xl font-semibold text-white mb-6">
-          Available Quizzes
+          Quizzes
         </h2>
         <div className="grid gap-6">
           {element}

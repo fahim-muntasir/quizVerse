@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { SlidersHorizontal, ChevronDown, XCircle } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import SearchBox from "./SearchBox";
 import { useAppDispatch} from "@/libs/hooks";
 import {
@@ -27,6 +27,7 @@ const defaultFilters = {
 export function SearchAndFilter() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const dispatch = useAppDispatch();
 
   const [dropdownOpen, setDropdownOpen] = useState<Record<string, boolean>>({
@@ -65,7 +66,11 @@ export function SearchAndFilter() {
       params.set(key.toLowerCase(), value);
     }
 
-    router.push(`search?${params.toString()}`, { scroll: false });
+    if (pathname === "/") {
+      router.push(`search?${params.toString()}`, { scroll: false });
+    }else{
+      router.push(`?${params.toString()}`, { scroll: false });
+    }
   };
 
   const handleFilterChange = (category: FilterKey, option: string) => {

@@ -50,7 +50,7 @@ export default function SearchBox() {
   
     setQuery(selectedQuery);
     dispatch(search(selectedQuery));
-    router.push(`search?${currentParams.toString()}`);
+    router.push(`/search?${currentParams.toString()}`);
     setShowDropdown(false);
   };
 

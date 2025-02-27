@@ -5,6 +5,7 @@ import { BackgroundPattern } from "@/components/background/BackgroundPattern";
 import TopParticipants from "@/components/Home/TopParticipants";
 // import QuizList from "@/components/Home/QuizList";
 import SearchQuizList from "@/components/Search/SearchQuizList";
+import SideMenu from "@/components/Home/SideMenu";
 
 // Mock data for top participants by category
 const topParticipantsByCategory = {
@@ -43,6 +44,7 @@ export default function Home() {
             <SearchQuizList />
 
             <div className="lg:col-span-1">
+              <SideMenu />
               <TopParticipants categories={topParticipantsByCategory} />
             </div>
           </div>
