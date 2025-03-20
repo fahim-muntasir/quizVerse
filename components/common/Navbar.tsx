@@ -25,7 +25,7 @@ export function Navbar() {
 
   return (
     <>
-      <nav className="bg-[#1C1C1C] border-b border-gray-800">
+      <nav>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             {/* Logo */}
@@ -46,7 +46,6 @@ export function Navbar() {
                       className="flex items-center gap-2 px-3 py-2 rounded-md border border-[#525252] text-white hover:border-white transition duration-200"
                     >
                       <Plus className="w-4 h-4" />
-                      Create Quiz
                     </button>
 
                     <button
@@ -54,7 +53,6 @@ export function Navbar() {
                       className="flex items-center gap-2 px-4 py-2 rounded-md border border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition duration-200"
                     >
                       <LogIn className="w-4 h-4" />
-                      Logout
                     </button>
                   </>
                 ) : (

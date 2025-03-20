@@ -63,6 +63,7 @@ export default function ParticipatedQuizList() {
       observer.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && isValidResponse && page < quizzes.pagination.totalPage) {
           setHasData(true);
+          setPage((prevPage) => prevPage + 1);
         } else {
           setHasData(false);
         }
@@ -89,7 +90,7 @@ export default function ParticipatedQuizList() {
   return (
     <>
       <div className="lg:col-span-2">
-        <h2 className="text-2xl font-semibold text-white mb-6">Available Quizzes</h2>
+        <h2 className="text-2xl font-semibold text-white mb-6">Your participation</h2>
         <div className="grid gap-6">
           {isLoading ? <><QuizCardLoader /> <QuizCardLoader /> <QuizCardLoader /></> : renderQuizCards()}
           {hasData && <><QuizCardLoader /> <QuizCardLoader /></>}

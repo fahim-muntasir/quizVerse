@@ -3,33 +3,34 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { QuizCard } from "../Home/QuizCard/QuizCard";
 import ParticipantsQuizModal from "@/components/ParticipantsQuizModal";
-import { useGetQuizzesQuery } from "@/libs/features/quiz/quizApiSlice";
+import { useGetUserQuizzesQuery } from "@/libs/features/user/userAppiSlice";
 import QuizCardLoader from "../Home/QuizCardLoader";
 import { isQuizResponse } from "@/utils/typeGuards";
 import { Quiz } from "@/types/quiz";
 import Error from "../common/Error";
+import { useParams } from "next/navigation";
 
-export default function SearchQuizList() {
+export default function CreatedQuizList() {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("q") || ""; // Get search query from URL
   const category = searchParams.get("category") || "";
   const difficulty = searchParams.get("difficulty") || "";
   const duration = searchParams.get("duration") || "";
+  const { userId } = useParams();
   
   const [hasData, setHasData] = useState(false);
   const [page, setPage] = useState(1);
   const [allQuizzes, setAllQuizzes] = useState<Quiz[]>([]);
 
-  console.log("Search Query:", searchQuery);
-
   // Fetch data using RTK Query
-  const { data: quizzes, isLoading, isError, isSuccess } = useGetQuizzesQuery({
+  const { data: quizzes, isLoading, isError, isSuccess } = useGetUserQuizzesQuery({
     page,
     limit: 10,
     searchQuery,
     category,
     difficulty,
     duration,
+    userId: userId as string,
   });
 
   // Validate API response type
@@ -89,7 +90,7 @@ export default function SearchQuizList() {
   return (
     <>
       <div className="lg:col-span-2">
-        <h2 className="text-2xl font-semibold text-white mb-6">Available Quizzes</h2>
+        <h2 className="text-2xl font-semibold text-white mb-6">Your participation</h2>
         <div className="grid gap-6">
           {isLoading ? <><QuizCardLoader /> <QuizCardLoader /> <QuizCardLoader /></> : renderQuizCards()}
           {hasData && <><QuizCardLoader /> <QuizCardLoader /></>}

@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { SlidersHorizontal, ChevronDown, XCircle } from "lucide-react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import SearchBox from "./SearchBox";
+import SearchBox from "@/components/common/SearchBox/SearchBox";
 import { useAppDispatch} from "@/libs/hooks";
 import {
   filterByCategory,

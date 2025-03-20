@@ -1,10 +1,10 @@
 import { Navbar } from "@/components/common/Navbar";
 import { SearchAndFilter } from "@/components/Home/SearchAndFilter/SearchAndFilter";
-import Hero from "@/components/Home/Hero";
+import Hero from "@/components/common/Hero";
 import { BackgroundPattern } from "@/components/background/BackgroundPattern";
 import TopParticipants from "@/components/Home/TopParticipants";
-import QuizList from "@/components/Home/QuizList";
 import SideMenu from "@/components/Home/SideMenu";
+import CreatedQuizList from "@/components/CreatedQuizzes/CreatedQuizList";
 
 // Mock data for top participants by category
 const topParticipantsByCategory = {
@@ -40,7 +40,7 @@ export default function Home() {
           <SearchAndFilter />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <QuizList />
+            <CreatedQuizList />
 
             <div className="lg:col-span-1">
               <SideMenu />

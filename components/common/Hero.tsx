@@ -1,6 +1,12 @@
+"use client"
 import React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/libs/utils";
 
 export default function Hero() {
+  const pathname = usePathname();
+
   return (
     <div className="relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
@@ -14,12 +20,12 @@ export default function Hero() {
               improve your language skills through interactive practice.
             </p>
             <div className="flex gap-4 justify-center">
-              <button className="px-5 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors">
+              <Link href={"/"} className={cn("px-5 py-2 bg-[#343434] text-white rounded-md hover:bg-[#424242]transition-colors", pathname === "/" && "bg-green-500")}>
                 Take a Quiz
-              </button>
-              <button className="px-5 py-2 bg-[#343434] text-white rounded-md hover:bg-[#424242] transition-colors">
+              </Link>
+              <Link href={"/practicezoon"} className={cn("px-5 py-2 bg-[#343434] text-white rounded-md hover:bg-[#424242]transition-colors", pathname === "/practicezoon" && "bg-green-500")}>
                 Practice Language
-              </button>
+              </Link>
             </div>
           </div>
         </div>

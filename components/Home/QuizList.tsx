@@ -19,8 +19,6 @@ export default function QuizList() {
     limit: 10,
   });
 
-  console.log("quizzes==", quizzes);
-
   // Validate the type of quizzes using the type guard
   const isValidResponse = quizzes && isQuizResponse(quizzes);
 
@@ -110,7 +108,7 @@ export default function QuizList() {
           {hasData && <><QuizCardLoader /> <QuizCardLoader /></>}
         </div>
       </div>
-      <ParticipantsQuizModal />
+      <ParticipantsQuizModal page={page}  />
     </>
   );
 }

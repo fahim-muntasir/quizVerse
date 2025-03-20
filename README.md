@@ -17,3 +17,12 @@ Here are some screenshots of the project:
 ### Participants-Quiz-Modal
 ![Participants-Quiz-Modal](/public/quizModal.png)
 ![Participants-Quiz-success-Modal](/public/successModal.png)
+
+### Practice-Zoon
+![Result-page](/public/practiceZoon.png)
+
+### Room-Details-Modal
+![Result-page](/public/roomDetails.png)
+
+### Inside-room
+![Result-page](/public/room.png)
