@@ -1,6 +1,8 @@
 import { Quiz, QuizResponseType } from "@/types/quiz";
 import { AuthResponse } from "@/types/auth";
 import { ParticipantResponseType } from "@/types/participants";
+import { TopParticipantsResponse, TopParticipantsTypes } from "@/types/leaderboard";
+
 // Type guard for a single Quiz object
 // export const isQuiz = (quiz: unknown): quiz is Quiz => {
 //   if (typeof quiz !== "object" || quiz === null) return false;
@@ -122,4 +124,43 @@ export const isParticipantResponse = (data: unknown): data is ParticipantRespons
     typeof dataField.hasParticipated === "boolean" &&
     typeof dataField._id === "string"
   );
+};
+
+
+// top participants type guard // Adjust the import path
+
+// Type guard for TopParticipantsTypes
+const isTopParticipantsTypes = (data: unknown): data is TopParticipantsTypes => {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'totalMarks' in data &&
+    'totalQuizMarks' in data &&
+    'totalAttempts' in data &&
+    'userId' in data &&
+    'name' in data &&
+    'email' in data &&
+    'rank' in data
+  );
+};
+
+// Type guard for TopParticipantsResponse
+export const isTopParticipantsResponse = (response: unknown): response is TopParticipantsResponse => {
+  // Check if the response is an object and has the required properties
+  if (
+    typeof response === 'object' &&
+    response !== null &&
+    'success' in response &&
+    'code' in response &&
+    'message' in response &&
+    'data' in response
+  ) {
+    // Extract the data property and check if it's an array
+    const data = (response as TopParticipantsResponse).data;
+    if (Array.isArray(data)) {
+      // Check if every item in the array is of type TopParticipantsTypes
+      return data.every(isTopParticipantsTypes);
+    }
+  }
+  return false;
 };

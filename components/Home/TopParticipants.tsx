@@ -1,29 +1,42 @@
+"use client";
+import { useEffect, useState } from 'react';
 import { Trophy } from 'lucide-react';
 import { cn } from '@/libs/utils';
 import Image from 'next/image';
 import { generateIdenticonAvatar } from '@/utils/generateAvatar';
-
-type Participant = {
-  name: string;
-  score: number;
-  rank: number;
-  badge: string;
-  avatar?: string; // Optional avatar URL
-};
-
-const topParticipantsByCategory: Participant[] = [
-  { name: "John Doe", score: 98, rank: 1, badge: "Elite Coder", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" },
-  { name: "Jane Smith", score: 95, rank: 2, badge: "Code Master" },
-  { name: "Mike Johnson", score: 92, rank: 3, badge: "Tech Guru" },
-  { name: "Sarah Wilson", score: 97, rank: 1, badge: "Language Expert" },
-  { name: "Tom Brown", score: 94, rank: 2, badge: "Word Master" },
-  { name: "Lisa Davis", score: 91, rank: 3, badge: "Grammar Pro" },
-  { name: "Alex Turner", score: 96, rank: 1, badge: "Science Wizard" },
-  { name: "Emma White", score: 93, rank: 2, badge: "Lab Master" },
-  { name: "Chris Black", score: 90, rank: 3, badge: "Research Pro" },
-];
+import { useGetTopParticipantsQuery } from '@/libs/features/leaderboard/leaderboardApiSlice';
+import { isTopParticipantsResponse } from '@/utils/typeGuards';
+import LoadingSkeleton from './TopParticipantsLoadingSkeleton';
+import { useSocket } from '@/hooks/useSocket';
+import { TopParticipantsTypes } from '@/types/leaderboard';
+import Error from '../common/Error';
 
 export default function TopParticipants() {
+  const { data: initialParticipants, isLoading, isError } = useGetTopParticipantsQuery();
+
+  const [participants, setParticipants] = useState<TopParticipantsTypes[]>([]);
+
+  const socket = useSocket();
+
+  useEffect(() => {
+    if (initialParticipants && isTopParticipantsResponse(initialParticipants)) {
+      setParticipants(initialParticipants.data);
+    }
+  }, [initialParticipants]);
+
+  // Listen for real-time updates from the socket
+  useEffect(() => {
+    if (socket) {
+      socket.on("topParticipants", (updatedParticipants) => {
+        setParticipants(updatedParticipants);
+      });
+    }
+
+    return () => {
+      if (socket) socket.off("topParticipants");
+    };
+  }, [socket]);
+
   const getBadgeColor = (rank: number) => {
     switch (rank) {
       case 1:
@@ -37,15 +50,28 @@ export default function TopParticipants() {
     }
   };
 
-  return (
-    <div className="bg-[#1C1C1C] border border-gray-800 rounded-lg p-6">
-      <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
-        <Trophy className="w-5 h-5 text-yellow-500" />
-        Top Participants
-      </h2>
+  let element = null;
 
+  // Render loading skeleton if data is loading
+  if (isLoading) {
+    element = <LoadingSkeleton />;
+  }
+
+  // Render error message if there's an error
+  if (isError) {
+    element = <Error msg="Please try again later." />;
+  }
+
+  // Ensure data is an array before rendering
+  if (!participants || participants.length === 0) {
+    element = <p className="text-gray-400">No data available.</p>;
+  }
+
+  // Render the list of participants
+  if (participants && participants.length > 0) {
+    element = (
       <div className="space-y-6">
-        {topParticipantsByCategory.map((participant, index) => {
+        {participants.map((participant, index) => {
           const avatarSvg = participant.avatar || generateIdenticonAvatar(participant.name, 40);
 
           return (
@@ -69,18 +95,22 @@ export default function TopParticipants() {
                         className="w-10 h-10 rounded-full flex items-center justify-center"
                       />
                     )}
-                    <div className='w-36'>
+                    <div className="w-36">
                       <p className="text-white font-medium">{participant.name}</p>
-                      <span className={cn(
-                        "text-xs px-2 py-0.5 rounded-full border inline-block mt-1",
-                        getBadgeColor(participant.rank)
-                      )}>
+                      <span
+                        className={cn(
+                          "text-xs px-2 py-0.5 rounded-full border inline-block mt-1",
+                          getBadgeColor(participant.rank)
+                        )}
+                      >
                         {participant.badge}
                       </span>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-green-500 font-bold text-lg">{participant.score}%</p>
+                    <p className="text-green-500 font-bold text-base">
+                      {participant.totalMarks} /=
+                    </p>
                     <p className="text-xs text-gray-400">Rank #{participant.rank}</p>
                   </div>
                 </div>
@@ -89,6 +119,16 @@ export default function TopParticipants() {
           );
         })}
       </div>
+    );
+  }
+
+  return (
+    <div className="bg-[#1C1C1C] border border-gray-800 rounded-lg p-6">
+      <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+        <Trophy className="w-5 h-5 text-yellow-500" />
+        Top Participants
+      </h2>
+      {element}
     </div>
   );
 }
