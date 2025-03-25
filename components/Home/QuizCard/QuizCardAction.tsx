@@ -6,8 +6,10 @@ import {
   ToggleRight,
 } from "lucide-react";
 import { useAppSelector } from '@/libs/hooks';
+import { useDeleteQuizMutation } from '@/libs/features/quiz/quizApiSlice';
 
 export default function QuizCardAction({ id, status, title, owner }: { id: string, status: string, title: string, owner: string }) {
+  const [deleteQuiz] = useDeleteQuizMutation();
   const [showShareMenu, setShowShareMenu] = useState(false);
 
   const { user } = useAppSelector(state => state.auth);
@@ -37,9 +39,9 @@ export default function QuizCardAction({ id, status, title, owner }: { id: strin
     setShowShareMenu(false);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this quiz?")) {
-      console.log("Delete quiz:", id);
+      await deleteQuiz({id, userId: user?.id as string}).unwrap();
     }
   };
 

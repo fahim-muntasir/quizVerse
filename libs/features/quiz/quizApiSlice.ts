@@ -35,6 +35,7 @@ export const quizApiSlice = apiSlice.injectEndpoints({
       },
       providesTags: (result, error, { page }) => [{ type: "Quiz", id: page }],
     }),
+
     createQuiz: builder.mutation<unknown, CreateQuizType>({
       query: (body) => ({
         url: "/quizzes",
@@ -43,7 +44,19 @@ export const quizApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: [{ type: "Quiz" }, { type: "CheckParticipants" }],
     }),
+
+    deleteQuiz: builder.mutation<unknown, { id: string; userId: string }>({
+      query: ({ id }) => ({
+        url: `/quizzes/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["UserQuizzes"],
+    }),
   }),
 });
 
-export const { useGetQuizzesQuery, useCreateQuizMutation } = quizApiSlice;
+export const {
+  useGetQuizzesQuery,
+  useCreateQuizMutation,
+  useDeleteQuizMutation,
+} = quizApiSlice;

@@ -97,7 +97,7 @@ export default function CreatedQuizList() {
           {isError && <Error msg="Error fetching quizzes" />}
         </div>
       </div>
-      <ParticipantsQuizModal />
+      <ParticipantsQuizModal page={page} />
     </>
   );
 }
