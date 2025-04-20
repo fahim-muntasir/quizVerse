@@ -1,18 +1,27 @@
 "use client";
 import React from "react";
+import { usePathname } from "next/navigation";
 import { BookOpenCheck, LogIn, Plus } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/libs/hooks";
-import { openCreateQuizModal } from "@/libs/features/modal/modalSlice";
+import { openCreateQuizModal, openCreateRoomModal } from "@/libs/features/modal/modalSlice";
 import Link from "next/link";
 import CreateQuizModal from "../CreateQuizModal";
+import CreateRoomModal from "../CreateRoomModal";
 
 export function Navbar() {
   const dispatch = useAppDispatch();
   const isOpen = useAppSelector((state) => state.modal.createQuizModal.isOpen);
+  const roomIsOpen = useAppSelector((state) => state.modal.createRoomModal.isOpen);
   const user = useAppSelector((state) => state.auth.user);
 
-  const createQuizHandler = () => {
-    dispatch(openCreateQuizModal());
+  const pathname = usePathname();
+  console.log(pathname);
+  const modalHandler = () => {
+    if (pathname === "/practicezoon") {
+      dispatch(openCreateRoomModal());
+    }else{
+      dispatch(openCreateQuizModal());
+    }
   };
 
   const logoutHandler = () => {
@@ -42,7 +51,7 @@ export function Navbar() {
                 user ? (
                   <>
                     <button
-                      onClick={createQuizHandler}
+                      onClick={modalHandler}
                       className="flex items-center gap-2 px-3 py-2 rounded-md border border-[#525252] text-white hover:border-white transition duration-200"
                     >
                       <Plus className="w-4 h-4" />
@@ -72,6 +81,7 @@ export function Navbar() {
         </div>
       </nav>
       <CreateQuizModal isOpen={isOpen} />
+      <CreateRoomModal isOpen={roomIsOpen} />
     </>
   );
 }

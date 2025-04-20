@@ -12,13 +12,7 @@ export const resultApiSlice = apiSlice.injectEndpoints({
         method: "POST",
         body: { ...body },
       }),
-      invalidatesTags: (result, error, res) => {
-        const quizId = res.quizId;
-        return [
-          { type: "Quiz" },
-          { type: "CheckParticipants", id: quizId },
-        ]
-      },
+      invalidatesTags: ["Quizzes", "UserQuizzes"],
     }),
   }),
 });

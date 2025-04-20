@@ -13,7 +13,6 @@ import { isQuiz } from '@/utils/typeGuards';
 import { useCreateResultMutation } from '@/libs/features/result/resultApiSlice';
 import SubmissionSuccess from './SubmissionSuccess';
 import toast from 'react-hot-toast';
-import { quizApiSlice } from '@/libs/features/quiz/quizApiSlice';
 
 export default function QuizModal({ page }: { page: number }) {
   const dispatch = useAppDispatch()
@@ -99,25 +98,6 @@ export default function QuizModal({ page }: { page: number }) {
         quizId: selectedQuiz._id,
         takenTime
       })
-
-      dispatch(
-        quizApiSlice.util.updateQueryData(
-          "getQuizzes",
-          { page, limit: 10 }, 
-          (draftQuizzes) => {
-            if (!draftQuizzes || !draftQuizzes.data) return;
-
-            console.log("Before update:", JSON.stringify(draftQuizzes, null, 2));
-
-            // Remove the participated quiz
-            draftQuizzes.data = draftQuizzes.data.filter(
-              (quiz) => quiz._id !== selectedQuiz._id
-            );
-
-            console.log("After update:", JSON.stringify(draftQuizzes, null, 2));
-          }
-        )
-      );
     } catch (error) {
       console.log(error);
       toast.error("Something went wrong!");

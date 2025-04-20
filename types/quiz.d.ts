@@ -24,6 +24,7 @@ export type Quiz = {
   totalMarks: number;
   status: string;
   user: string;
+  isParticipated?: boolean;
   createdAt: string;
   updatedAt: string;
 };

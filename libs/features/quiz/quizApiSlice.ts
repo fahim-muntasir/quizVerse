@@ -33,7 +33,7 @@ export const quizApiSlice = apiSlice.injectEndpoints({
           duration: duration ?? 1,
         })}`;
       },
-      providesTags: (result, error, { page }) => [{ type: "Quiz", id: page }],
+      providesTags: ["Quizzes"],
     }),
 
     createQuiz: builder.mutation<unknown, CreateQuizType>({
@@ -42,7 +42,32 @@ export const quizApiSlice = apiSlice.injectEndpoints({
         method: "POST",
         body: { ...body },
       }),
-      invalidatesTags: [{ type: "Quiz" }, { type: "CheckParticipants" }],
+      invalidatesTags: ["Quizzes"],
+    }),
+
+    getUserQuizzes: builder.query<
+      unknown,
+      {
+        page?: number;
+        limit?: number;
+        searchQuery?: string;
+        category?: string;
+        difficulty?: string;
+        duration?: string;
+        userId?: string;
+      }
+    >({
+      query: ({ page, limit, searchQuery, category, difficulty, duration, userId }) => {
+        return `/users/quizzes/${userId}?${generateQuery({
+          page: page ?? 1,
+          limit: limit ?? 10,
+          search: searchQuery ?? "",
+          category: category ?? "",
+          difficulty: difficulty ?? "",
+          duration: duration ?? 1,
+        })}`;
+      },
+      providesTags: ["UserQuizzes"],
     }),
 
     deleteQuiz: builder.mutation<unknown, { id: string; userId: string }>({
@@ -59,4 +84,5 @@ export const {
   useGetQuizzesQuery,
   useCreateQuizMutation,
   useDeleteQuizMutation,
+  useGetUserQuizzesQuery,
 } = quizApiSlice;

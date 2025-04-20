@@ -3,7 +3,7 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { QuizCard } from "../Home/QuizCard/QuizCard";
 import ParticipantsQuizModal from "@/components/ParticipantsQuizModal";
-import { useGetUserQuizzesQuery } from "@/libs/features/user/userAppiSlice";
+import { useGetUserQuizzesQuery } from "@/libs/features/quiz/quizApiSlice";
 import QuizCardLoader from "../Home/QuizCardLoader";
 import { isQuizResponse } from "@/utils/typeGuards";
 import { Quiz } from "@/types/quiz";

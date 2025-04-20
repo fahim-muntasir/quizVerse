@@ -11,7 +11,7 @@ import { InitialValues } from "@/types/quizCreateModal";
 import { quizCreationSchema } from "@/schemas";
 import { useAppDispatch } from "@/libs/hooks";
 import { closeCreateQuizModal } from "@/libs/features/modal/modalSlice";
-import Header from "./Header";
+import Header from "../common/Modal/Header";
 import { useCreateQuizMutation } from "@/libs/features/quiz/quizApiSlice";
 import { toast } from "react-hot-toast";
 
