@@ -6,7 +6,8 @@ import ParticipantsQuizModal from "@/components/ParticipantsQuizModal";
 import { useGetUserQuizzesQuery } from "@/libs/features/quiz/quizApiSlice";
 import QuizCardLoader from "../Home/QuizCardLoader";
 import { isQuizResponse } from "@/utils/typeGuards";
-import { Quiz } from "@/types/quiz";
+import { useAppDispatch, useAppSelector } from "@/libs/hooks";
+import { setUserQuizzes } from "@/libs/features/quiz/quizSlice";
 import Error from "../common/Error";
 import { useParams } from "next/navigation";
 
@@ -17,12 +18,12 @@ export default function CreatedQuizList() {
   const difficulty = searchParams.get("difficulty") || "";
   const duration = searchParams.get("duration") || "";
   const { userId } = useParams();
-  
+
   const [hasData, setHasData] = useState(false);
   const [page, setPage] = useState(1);
-  const [allQuizzes, setAllQuizzes] = useState<Quiz[]>([]);
+  const { userQuizzes } = useAppSelector((state => state.quiz));
+  const dispatch = useAppDispatch();
 
-  // Fetch data using RTK Query
   const { data: quizzes, isLoading, isError, isSuccess } = useGetUserQuizzesQuery({
     page,
     limit: 10,
@@ -38,20 +39,23 @@ export default function CreatedQuizList() {
 
   // Reset quizzes when search query changes
   useEffect(() => {
-    setPage(1); // Reset pagination
-    setAllQuizzes([]); // Clear previous results
+    setPage(1);
+    dispatch(setUserQuizzes([]));
   }, [searchQuery]);
 
   // Append new quizzes when API fetch is successful
   useEffect(() => {
     if (isSuccess && isValidResponse) {
-      setAllQuizzes((prevQuizzes) => {
-        if (page === 1) return quizzes.data; // Replace for new search
+
+      if (page === 1) {
+        dispatch(setUserQuizzes(quizzes.data));
+      } else {
         const newQuizzes = quizzes.data.filter(
-          (newQuiz) => !prevQuizzes.some((prevQuiz) => prevQuiz._id === newQuiz._id)
+          (newQuiz) => !userQuizzes.some((prevQuiz) => prevQuiz._id === newQuiz._id)
         );
-        return [...prevQuizzes, ...newQuizzes]; // Append for infinite scroll
-      });
+        const allUserQuizzes = [...userQuizzes, ...newQuizzes];
+        dispatch(setUserQuizzes(allUserQuizzes));
+      }
     }
   }, [isSuccess, isValidResponse, quizzes, page]);
 
@@ -75,14 +79,14 @@ export default function CreatedQuizList() {
 
   // Render Quiz Cards
   const renderQuizCards = () => {
-    if (allQuizzes.length === 0 && !isLoading) {
+    if (userQuizzes.length === 0 && !isLoading) {
       return <div className="text-white">No quizzes available</div>;
     }
-    return allQuizzes.map((quiz, index) => (
+    return userQuizzes.map((quiz, index) => (
       <QuizCard
         key={quiz._id} // Use _id for uniqueness
         quiz={quiz}
-        ref={index === allQuizzes.length - 1 ? lastQuizElementRef : undefined}
+        ref={index === userQuizzes.length - 1 ? lastQuizElementRef : undefined}
       />
     ));
   };

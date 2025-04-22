@@ -23,6 +23,7 @@ export type Quiz = {
   title: string;
   totalMarks: number;
   status: string;
+  totalParticipants: number;
   user: string;
   isParticipated?: boolean;
   createdAt: string;

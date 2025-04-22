@@ -13,12 +13,18 @@ export const QuizCardFooter: React.FC<{ quiz: Quiz }> = ({ quiz }) => {
     dispatch(openParticipateQuizModal());
   };
 
+  const generateParticipant = (totalParticipants = 0) => {
+    if (totalParticipants === 0) return "No participants yet";
+    if (totalParticipants === 1) return `${totalParticipants} participant`;
+    return `${totalParticipants} participants`;
+  }
+
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center space-x-4 text-sm text-gray-400">
         <div className="flex items-center">
           <Users className="w-4 h-4 mr-1" />
-          100 participants
+          {generateParticipant(quiz.totalParticipants)}
         </div>
         <div className="flex items-center">
           <Clock className="w-4 h-4 mr-1" />

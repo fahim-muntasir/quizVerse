@@ -40,9 +40,9 @@ export function Navbar() {
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-2">
               <div className="bg-green-500/10 p-2 rounded-full">
-                <BookOpenCheck className="w-6 h-6 text-green-500" />
+                <BookOpenCheck className="w-7 h-7 text-green-500" />
               </div>
-              <span className="text-white font-semibold text-lg">QuizVerse</span>
+              {/* <span className="text-white font-semibold text-lg">QuizVerse</span> */}
             </Link>
 
             {/* Buttons */}

@@ -5,14 +5,16 @@ import ParticipantsQuizModal from "@/components/ParticipantsQuizModal";
 import { useGetQuizzesQuery } from "@/libs/features/quiz/quizApiSlice";
 import QuizCardLoader from "./QuizCardLoader";
 import { isQuizResponse } from "@/utils/typeGuards";
-import { Quiz } from "@/types/quiz";
+import { useAppSelector, useAppDispatch } from "@/libs/hooks";
+import { setAllQuizzes } from "@/libs/features/quiz/quizSlice";
 import Error from "../common/Error";
 
 export default function QuizList() {
   const [hasData, setHasData] = useState(false);
   const [page, setPage] = useState(1);
-  const [allQuizzes, setAllQuizzes] = useState<Quiz[]>([]);
-  
+  const { allQuizzes } = useAppSelector((state) => state.quiz);
+  const dispatch = useAppDispatch();
+
   // Fetch data using RTK Query
   const { data: quizzes, isLoading, isError, isSuccess } = useGetQuizzesQuery({
     page,
@@ -30,15 +32,15 @@ export default function QuizList() {
 
   useEffect(() => {
     if (isSuccess && isValidResponse) {
-      setAllQuizzes((prevQuizzes) => {
-        // Append new quizzes for infinite scrolling
-        const newQuizzes = quizzes.data.filter(
-          (newQuiz) => !prevQuizzes.some((prevQuiz) => prevQuiz._id === newQuiz._id)
-        );
-        return [...prevQuizzes, ...newQuizzes];
-      });
+
+      const newQuizzes = quizzes.data.filter(
+        (newQuiz) => !allQuizzes.some((prevQuiz) => prevQuiz._id === newQuiz._id)
+      );
+      const updatedQuiz = [...allQuizzes, ...newQuizzes];
+
+      dispatch(setAllQuizzes(updatedQuiz));
     }
-  }, [isSuccess, isValidResponse, quizzes]);
+  }, [isSuccess, isValidResponse, quizzes, dispatch]);
 
   const observer = useRef<IntersectionObserver | null>(null);
 
@@ -108,7 +110,7 @@ export default function QuizList() {
           {hasData && <><QuizCardLoader /> <QuizCardLoader /></>}
         </div>
       </div>
-      <ParticipantsQuizModal page={page}  />
+      <ParticipantsQuizModal page={page} />
     </>
   );
 }
