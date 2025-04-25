@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Mic, MicOff, Video, VideoOff, PhoneOff, MessageCircle,
   Users, Share2, LayoutGrid,
@@ -6,73 +6,66 @@ import {
 } from 'lucide-react';
 import ControlButton from './ControlButton';
 
-export default function ControlsBar({ setLayout, showChat, setShowChat, showParticipants, setShowParticipants }: {setLayout: (layout: 'grid' | 'spotlight') => void; showChat: boolean; setShowChat: (show: boolean) => void; showParticipants: boolean; setShowParticipants: (show: boolean) => void}) {
+export default function ControlsBar({
+  setLayout,
+  showChat,
+  setShowChat,
+  showParticipants,
+  setShowParticipants
+}: {
+  setLayout: (layout: 'grid' | 'spotlight') => void;
+  showChat: boolean;
+  setShowChat: (show: boolean) => void;
+  showParticipants: boolean;
+  setShowParticipants: (show: boolean) => void;
+}) {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isHandRaised, setIsHandRaised] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date().toLocaleTimeString());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <div className="h-24 bg-background backdrop-blur-sm border-t border-gray-800 flex items-center justify-between px-6">
-      <div className="flex items-center gap-4">
-        <button
-          onClick={() => setLayout(l => l === 'grid' ? 'spotlight' : 'grid')}
-          className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-400 hover:text-gray-300"
-        >
-          <LayoutGrid size={20} />
-        </button>
-        <span className="text-gray-400 text-sm">
-          {new Date().toLocaleTimeString()}
-        </span>
+    <div className="relative h-24 w-full bg-background backdrop-blur-sm border-t border-gray-800">
+      {/* Time (bottom-left) */}
+      <div className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+        {currentTime}
       </div>
 
-      <div className="flex items-center gap-4">
+      {/* Controls (bottom-center) */}
+      <div className="absolute bottom-4 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-4">
         <ControlButton
           icon={isMuted ? MicOff : Mic}
           active={!isMuted}
           onClick={() => setIsMuted(!isMuted)}
-          label="Mic"
+          label='Mute/Unmute'
         />
         <ControlButton
           icon={isVideoOff ? VideoOff : Video}
           active={!isVideoOff}
           onClick={() => setIsVideoOff(!isVideoOff)}
-          label="Camera"
+          label='Video On/Off'
         />
         <ControlButton
           icon={Hand}
           active={isHandRaised}
           onClick={() => setIsHandRaised(!isHandRaised)}
-          label="Raise Hand"
+          label='Raise Hand'
         />
         <ControlButton
           icon={Share2}
-          label="Share"
+          label='Share Screen'
         />
         <ControlButton
           icon={PhoneOff}
           danger
-          label="Leave"
-        />
-      </div>
-
-      <div className="flex items-center gap-3">
-        <ControlButton
-          icon={MessageCircle}
-          active={showChat}
-          onClick={() => {
-            setShowChat(!showChat);
-            setShowParticipants(false);
-          }}
-          label="Chat"
-        />
-        <ControlButton
-          icon={Users}
-          active={showParticipants}
-          onClick={() => {
-            setShowParticipants(!showParticipants);
-            setShowChat(false);
-          }}
-          label="People"
+          label='Leave Room'
         />
       </div>
     </div>

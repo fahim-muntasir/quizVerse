@@ -1,41 +1,74 @@
-import React from 'react'
-import { RoomType } from '@/types/room';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState } from 'react'
+import {
+  ChevronRight,
+  MessageSquareText,
+  Users,
+  HelpCircle,
+  Settings 
+} from 'lucide-react';
 import Chat from './Chat';
-import ParticipantsList from './ParticipantsList';
+import RoomQuizzes from './RoomQuizzes/index';
+// import ParticipantsList from './ParticipantsList';
 
-export default function SidePanel({ showChat,
-  showParticipants,
+export default function SidePanel({
   sidebarCollapsed,
-  setSidebarCollapsed,
-  room }: { showChat: boolean; showParticipants: boolean; sidebarCollapsed: boolean; setSidebarCollapsed: (value: boolean) => void; room: RoomType }) {
+  setSidebarCollapsed
+}: {
+  sidebarCollapsed: boolean;
+  setSidebarCollapsed: (value: boolean) => void;
+}) {
+  const [activeTab, setActiveTab] = useState<'Chat' | 'Participants' | 'Quizzes' | 'Setting'>('Chat');
+
+  const icons = [
+    { label: 'Chat', icon: <MessageSquareText size={22} />, active: false },
+    { label: 'Participants', icon: <Users size={22} />, active: false },
+    { label: 'Settings', icon: <Settings size={22} />, active: false },
+    { label: 'Quizzes', icon: <HelpCircle size={22} />, active: false },
+  ];
+
+  const sideMenuHandler = (label: string) => {
+    setActiveTab(label as 'Chat' | 'Participants' | 'Quizzes' | 'Setting');
+    setSidebarCollapsed(true);
+  }
 
   return (
-    <div className={`bg-background z-10 border-l border-gray-800 transition-all ${sidebarCollapsed ? 'w-0' : 'w-80'
-      }`}>
-      <div className="h-full flex flex-col">
-        <div className="p-4 border-b border-gray-800 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">
-            {showChat ? 'Chat' : 'Participants'}
-          </h2>
+    <div className={`bg-background z-10 border-l border-gray-800  ${!sidebarCollapsed ? 'w-16' : 'w-[23rem]'}`}>
+
+      {!sidebarCollapsed && <div className={` flex gap-4 items-center transition-all flex-col justify-end h-full pb-8`}>
+        {icons.map((item, index) => (
           <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="p-1 hover:bg-[#343434] rounded-lg transition-colors"
+            key={index}
+            onClick={() => sideMenuHandler(item.label)}
+            className={`flex items-center gap-2 px-2 py-2 rounded-md hover:bg-gray-700/40 text-sm text-white transform transition-all duration-500 ease-in-out translate-y-0 delay-${(index + 1) * 100}
+            }`}
           >
-            {sidebarCollapsed ? (
-              <ChevronLeft size={20} className="text-gray-400" />
-            ) : (
-              <ChevronRight size={20} className="text-gray-400" />
-            )}
+            {item.icon}
           </button>
-        </div>
+        ))}
+      </div>}
 
-        <div className="flex-1 overflow-auto">
-          {showParticipants && <ParticipantsList room={room} />}
+      {sidebarCollapsed && <div className={` flex gap-4 items-center transition-all flex-row h-16 border-b border-gray-800 px-4`}>
+        {icons.map((item, index) => (
+          <button
+            key={index}
+            onClick={() => sideMenuHandler(item.label)}
+            className={`flex items-center gap-2 px-2 py-2 rounded-md text-sm text-white transform transition-all duration-500 ease-in-out translate-y-0 delay-75 ${activeTab === item.label ? 'bg-primary/70' : 'hover:bg-gray-700/40'}`}
+          >
+            {item.icon}
+          </button>
+        ))}
 
-          {showChat && <Chat />}
-        </div>
-      </div>
+        <button
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          className={`ml-auto px-2 py-2 rounded-md hover:bg-gray-700/40 text-sm text-white transform transition-opacity duration-500 delay-700`}
+        >
+          <ChevronRight size={22} />
+        </button>
+      </div>}
+
+      {sidebarCollapsed && activeTab === 'Chat' && <Chat />}
+
+      {sidebarCollapsed && activeTab === 'Quizzes' && <RoomQuizzes />}
     </div>
   )
 }

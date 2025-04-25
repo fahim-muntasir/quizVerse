@@ -36,7 +36,7 @@ const room: RoomType = {
     {
       id: "3",
       name: "Yuki Tanaka",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150",
+      // avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150",
       proficiency: "Advanced",
       isHost: false
     },
@@ -78,15 +78,10 @@ const VideoConference = () => {
       </div>
 
       {/* Side panel */}
-      {(showChat || showParticipants) && (
-        <SidePanel 
-          room={room} 
-          showChat={showChat} 
-          showParticipants={showParticipants} 
-          sidebarCollapsed={sidebarCollapsed} 
-          setSidebarCollapsed={setSidebarCollapsed} 
-        />
-      )}
+      <SidePanel
+        sidebarCollapsed={sidebarCollapsed}
+        setSidebarCollapsed={setSidebarCollapsed}
+      />
     </div>
   );
 };
