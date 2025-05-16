@@ -68,7 +68,7 @@ export default function SearchBox() {
       <form onSubmit={(e) => { e.preventDefault(); handleSelect(query); }} className="relative">
         <input
           type="text"
-          placeholder="Search quizzes..."
+          placeholder="Search rooms by language, title, user, or ID..."
           value={query}
           onFocus={() => setShowDropdown(true)}
           onBlur={onBlurHandler}

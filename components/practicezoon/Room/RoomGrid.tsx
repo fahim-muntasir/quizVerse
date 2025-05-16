@@ -1,8 +1,13 @@
 import React from 'react'
 import RoomParticipant from './RoomParticipant'
 import { RoomType } from '@/types/room';
+import { useAppSelector } from '@/libs/hooks';
+import CreateQuizModal from '@/components/CreateQuizModal';
+import ParticipantsQuizModal from '@/components/ParticipantsQuizModal';
 
 export default function RoomGrid({ room, layout }: { room: RoomType; layout: string }) {
+  const {isOpen: createQuizModalIsOpen} = useAppSelector(state => state.modal.createQuizModal);
+
   return (
     <div className="flex-1 p-4 overflow-auto">
       <div className={`grid gap-4 ${layout === 'grid'
@@ -23,6 +28,10 @@ export default function RoomGrid({ room, layout }: { room: RoomType; layout: str
             <RoomParticipant key={member.id} member={member} />
           ))
         )}
+
+        {/* all modals inside the room */}
+        <CreateQuizModal isOpen={createQuizModalIsOpen} />
+        <ParticipantsQuizModal />
       </div>
     </div>
   )

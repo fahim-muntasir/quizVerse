@@ -26,3 +26,5 @@ Here are some screenshots of the project:
 
 ### Inside-room
 ![Result-page](/public/room.png)
+![Result-page](/public/roomWithChat.png)
+![Result-page](/public/roomParticipant.png)

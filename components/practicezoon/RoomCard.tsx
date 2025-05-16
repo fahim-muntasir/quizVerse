@@ -1,6 +1,7 @@
 import React, { forwardRef } from 'react';
 import { Users, Globe2, Expand } from 'lucide-react';
 import { RoomType } from '@/types/room';
+import { generateIdenticonAvatar } from '@/utils/generateAvatar';
 
 interface RoomCardProps {
   room: RoomType;
@@ -15,12 +16,35 @@ export const RoomCard = forwardRef<HTMLDivElement, RoomCardProps>(({ room, handl
     Native: "bg-blue-500/10 text-blue-500 border-blue-500/20",
   };
 
+  const isUnlimited = room.maxParticipants === 0 || room.maxParticipants === Infinity;
+  const maxGridCols = isUnlimited ? 5 : room.maxParticipants > 5 ? 5 : room.maxParticipants;
+
+  const gridColsMap: Record<number, string> = {
+    1: "grid-cols-1",
+    2: "grid-cols-2",
+    3: "grid-cols-3",
+    4: "grid-cols-4",
+    5: "grid-cols-5",
+  };
+
+  const gridColsClass: string = gridColsMap[maxGridCols] ?? "grid-cols-1";
+
+  const getSizeClasses = () => {
+    if (room.maxParticipants < 5) {
+      if (room.maxParticipants === 4) return "w-[75px] h-[75px]";
+      if (room.maxParticipants === 3) return "w-[98px] h-[98px]";
+      if (room.maxParticipants <= 2) return "w-[105px] h-[105px]";
+    }
+    return "w-14 h-14";
+  };
+
   return (
     <div
       ref={ref}
-      className="bg-background border border-gray-800 rounded-lg p-6 transition-all"
+      className="bg-background border border-gray-800 rounded-lg p-6 transition-all h-80 flex flex-col justify-between"
     >
-      <div className="flex justify-between items-start mb-4">
+      {/* Header */}
+      <div className="flex justify-between items-start">
         <div>
           <div className="flex items-center gap-2 mb-4">
             <span className={`text-sm px-3 py-1 rounded-full border ${levelColors[room.level]}`}>
@@ -31,38 +55,75 @@ export const RoomCard = forwardRef<HTMLDivElement, RoomCardProps>(({ room, handl
               {room.language}
             </span>
           </div>
-          {/* <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">{room.title}</h3> */}
+          <h3 className="text-md text-gray-200">{room.title}</h3>
         </div>
         <div className="flex items-center gap-1 text-gray-600">
           <Users size={18} />
-          <span>{room.currentParticipants}/{room.maxParticipants}</span>
+          <span>{room.currentParticipants}/{isUnlimited ? "∞" : room.maxParticipants}</span>
         </div>
       </div>
 
-      <p className="text-gray-600 mb-4">{room.description}</p>
-
-      <div className="flex items-center justify-between">
-        <div className="flex -space-x-2">
-          {room.members.slice(0, 4).map((member) => (
-            <img
-              key={member.id}
-              className="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800"
-              src={member.avatar}
-              alt={member.name}
-              title={member.name}
-            />
-          ))}
-          {room.members.length > 4 && (
-            <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 border-2 border-white dark:border-gray-800 flex items-center justify-center text-sm text-gray-600 dark:text-gray-400">
-              +{room.members.length - 4}
+      {/* Members Section */}
+      <div
+        className={`grid w-max ${gridColsClass} gap-3 ${room.maxParticipants < 3 ? "justify-start" : "justify-between"
+          } mx-auto`}
+      >
+        {isUnlimited ? (
+          room.members.map((member) => (
+            <div key={member.id} className="relative group">
+              <img
+                src={member.avatar}
+                alt={member.name}
+                className="w-14 h-14 rounded-full object-cover border-2 border-gray-800 shadow-md group-hover:scale-110 transition-transform"
+              />
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full mt-1 px-2 py-1 bg-black text-xs text-white rounded-md opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap z-10">
+                {member.name}
+              </div>
             </div>
-          )}
-        </div>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
-          Created {new Date(room.createdAt).toLocaleDateString()}
-        </span>
+          ))
+        ) : (
+          Array.from({ length: room.maxParticipants }).map((_, index) => {
+            const member = room.members[index];
+            const avatarSvg = member?.avatar || (member ? generateIdenticonAvatar(member.name, 150) : null);
+
+            return (
+              <div key={index} className="relative group">
+                {member ? (
+                  <>
+                    {member.avatar ? (
+                      <img
+                        src={member.avatar}
+                        alt={member.name}
+                        className={`${getSizeClasses()} rounded-full object-cover border-2 border-gray-800 shadow-md group-hover:scale-110 transition-transform`}
+                      />
+                    ) : (
+                      <div
+                        dangerouslySetInnerHTML={{ __html: avatarSvg! }}
+                        className={`${getSizeClasses()} rounded-full shadow-md flex items-center justify-center group-hover:scale-110 overflow-hidden transition-transform`}
+                      />
+                    )}
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full mt-1 px-2 py-1 bg-black text-xs text-white rounded-md opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap z-10">
+                      {member.name}
+                    </div>
+                  </>
+                ) : (
+                  <div
+                    className={`${getSizeClasses()} rounded-full border-2 border-dashed border-gray-800 flex items-center justify-center text-gray-400 text-xs`}
+                  ></div>
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
-      <button className='w-full mt-6 border border-dashed border-green-500/90 hover:bg-green-500 text-sm py-1 rounded-lg cursor-pointer flex items-center justify-center gap-2' onClick={handler}><Expand size={18} /> View Details</button>
+
+      {/* View Details Button */}
+      <button
+        onClick={handler}
+        className="w-full text-gray-200 border border-dashed border-green-500/90 hover:bg-green-500 text-sm py-1 rounded-lg cursor-pointer flex items-center justify-center gap-2"
+      >
+        <Expand size={18} /> View Details
+      </button>
     </div>
   );
 });

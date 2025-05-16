@@ -1,9 +1,16 @@
 'use client';
 import React, { useState } from 'react'
 import { Image, Sticker, Film, Send, Book, Smile } from 'lucide-react'
+import { useAppDispatch } from '@/libs/hooks';
+import { openCreateQuizModal } from '@/libs/features/modal/modalSlice';
 
 export default function ChatInputs() {
   const [msg, setMsg] = useState('');
+  const dispatch = useAppDispatch();
+
+  const createQuizModalHandler = () => {
+    dispatch(openCreateQuizModal());
+  }
 
   return (
     <div className="h-24 mt-3 px-4 flex items-center border-t border-gray-800">
@@ -34,7 +41,7 @@ export default function ChatInputs() {
               </button>
               {/* Quiz Button */}
               <button className="p-1 hover:bg-[#343434] rounded-full transition-colors">
-                <Book size={18} className="text-gray-300" />
+                <Book size={18} className="text-gray-300" onClick={createQuizModalHandler} />
               </button>
             </>}
 

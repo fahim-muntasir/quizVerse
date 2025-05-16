@@ -14,7 +14,7 @@ import { useCreateResultMutation } from '@/libs/features/result/resultApiSlice';
 import SubmissionSuccess from './SubmissionSuccess';
 import toast from 'react-hot-toast';
 
-export default function QuizModal({ page }: { page: number }) {
+export default function QuizModal() {
   const dispatch = useAppDispatch()
   const [createResult, { isSuccess }] = useCreateResultMutation();
   const selectedQuiz = useAppSelector(state => state.participantQuiz.selectedQuiz);

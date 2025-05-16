@@ -110,7 +110,7 @@ export default function QuizList() {
           {hasData && <><QuizCardLoader /> <QuizCardLoader /></>}
         </div>
       </div>
-      <ParticipantsQuizModal page={page} />
+      <ParticipantsQuizModal />
     </>
   );
 }

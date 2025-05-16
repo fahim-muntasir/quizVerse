@@ -4,12 +4,12 @@ import SingleQuiz from '../RoomQuizzes/SingleQuiz';
 import ChatInputs from './ChatInputs';
 
 const messages = [
-  { id: 1, sender: 'user', name: 'You', text: 'Hey! How are you doing?', reactions: [{ emoji: '👍', users: ['Alex', 'John'] }, { emoji: '❤️', users: ['You'] }, { emoji: '😂', users: ['Sam', 'Emma'] }] },
-  { id: 2, sender: 'other', name: 'Alex', text: 'I’m good, thanks! What about you?', reactions: [{ emoji: '❤️', users: ['You', 'Sam'] }, { emoji: '🔥', users: ['Emma'] }] },
-  { id: 3, sender: 'user', name: 'You', text: 'All good here! Ready for the meeting?', reactions: [{ emoji: '👍', users: ['Alex', 'Emma'] }] },
-  { id: 4, sender: 'other', name: 'Alex', text: 'Check this out! 🚀', emojiOnly: true, reactions: [{ emoji: '😂', users: ['Sam'] }, { emoji: '❤️', users: ['You', 'Emma'] }] },
-  { id: 5, sender: 'user', name: 'You', text: 'Here’s an image!', imageUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=1500', reactions: [{ emoji: '👍', users: ['Alex'] }] },
-  { id: 6, sender: 'other', name: 'Alex', text: 'Nice! Here’s a GIF', gifUrl: 'https://media.giphy.com/media/3ohs4Czz7j46NozUxs/giphy.gif', reactions: [{ emoji: '👍', users: ['You'] }, { emoji: '🔥', users: ['Sam', 'Emma'] }] },
+  // { id: 1, sender: 'user', name: 'You', text: 'Hey! How are you doing?', reactions: [{ emoji: '👍', users: ['Alex', 'John'] }, { emoji: '❤️', users: ['You'] }, { emoji: '😂', users: ['Sam', 'Emma'] }] },
+  // { id: 2, sender: 'other', name: 'Alex', text: 'I’m good, thanks! What about you?', reactions: [{ emoji: '❤️', users: ['You', 'Sam'] }, { emoji: '🔥', users: ['Emma'] }] },
+  // { id: 3, sender: 'user', name: 'You', text: 'All good here! Ready for the meeting?', reactions: [{ emoji: '👍', users: ['Alex', 'Emma'] }] },
+  // { id: 4, sender: 'other', name: 'Alex', text: 'Check this out! 🚀', emojiOnly: true, reactions: [{ emoji: '😂', users: ['Sam'] }, { emoji: '❤️', users: ['You', 'Emma'] }] },
+  // { id: 5, sender: 'user', name: 'You', text: 'Here’s an image!', imageUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=1500', reactions: [{ emoji: '👍', users: ['Alex'] }] },
+  // { id: 6, sender: 'other', name: 'Alex', text: 'Nice! Here’s a GIF', gifUrl: 'https://media.giphy.com/media/3ohs4Czz7j46NozUxs/giphy.gif', reactions: [{ emoji: '👍', users: ['You'] }, { emoji: '🔥', users: ['Sam', 'Emma'] }] },
   { id: 7, sender: 'user', name: 'You', text: 'All set for the meeting?', replyTo: 2, reactions: [{ emoji: '❤️', users: ['Alex'] }] },
 
   {
