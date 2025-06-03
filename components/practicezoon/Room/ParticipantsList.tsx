@@ -29,7 +29,7 @@ export default function ParticipantsList({ room }: { room: RoomType }) {
                 className="w-10 h-10 rounded-full flex items-center justify-center"
               />
             )}
-            {member.isHost && (
+            {member.id === room.hostId && (
               <div className="absolute -top-1 -right-1 bg-blue-500 rounded-full p-0.5">
                 <Crown size={12} className="text-white" />
               </div>
@@ -40,7 +40,7 @@ export default function ParticipantsList({ room }: { room: RoomType }) {
               {member.name}
             </p>
             <p className="text-gray-400 text-xs">
-              {member.proficiency} Level
+              proficiency Level
             </p>
           </div>
         </div>

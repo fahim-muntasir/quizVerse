@@ -1,28 +1,31 @@
 import React, { useState, useEffect } from 'react'
+import { useParams, useRouter } from 'next/navigation';
 import {
-  Mic, MicOff, Video, VideoOff, PhoneOff, MessageCircle,
-  Users, Share2, LayoutGrid,
+  Mic, MicOff, Video, VideoOff, PhoneOff, Share2,
   Hand
 } from 'lucide-react';
 import ControlButton from './ControlButton';
+import { useRemoveRoomMemberMutation } from '@/libs/features/room/roomApiSlice';
 
-export default function ControlsBar({
-  setLayout,
-  showChat,
-  setShowChat,
-  showParticipants,
-  setShowParticipants
-}: {
-  setLayout: (layout: 'grid' | 'spotlight') => void;
-  showChat: boolean;
-  setShowChat: (show: boolean) => void;
-  showParticipants: boolean;
-  setShowParticipants: (show: boolean) => void;
-}) {
+export default function ControlsBar() {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isHandRaised, setIsHandRaised] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
+
+  const [removeRoomMember] = useRemoveRoomMemberMutation();
+  const { id: roomId } = useParams();
+  const router = useRouter();
+
+  const handleLeaveRoom = async () => {
+    if (typeof roomId === 'string') {
+      await removeRoomMember(roomId).unwrap();
+      router.push(`/practicezoon`);
+    } else {
+      // Handle error or show a message
+      console.error('Invalid roomId:', roomId);
+    }
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -64,6 +67,7 @@ export default function ControlsBar({
         />
         <ControlButton
           icon={PhoneOff}
+          onClick={handleLeaveRoom}
           danger
           label='Leave Room'
         />

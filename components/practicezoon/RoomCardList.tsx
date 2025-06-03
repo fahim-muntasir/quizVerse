@@ -1,178 +1,80 @@
-"use client";
-import React, {useState} from 'react'
+'use client';
+import React, { useState, useEffect } from 'react'
 import { RoomCard } from './RoomCard'
 import { RoomType } from '@/types/room'
-import RoomDetailsModal from './RoomDetailsModal';
-
-const mockRooms: RoomType[] = [
-  {
-    id: "1",
-    title: "English Conversation Practice",
-    description: "Let's practice everyday English conversation! All levels welcome.",
-    language: "English",
-    level: "Intermediate",
-    maxParticipants: 2,
-    currentParticipants: 2,
-    status: "active",
-    createdAt: new Date().toISOString(),
-    members: [
-      {
-        id: "1",
-        name: "Sarah Johnson",
-        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
-        proficiency: "Native",
-        isHost: true
-      },
-      {
-        id: "2",
-        name: "Miguel Rodriguez",
-        // avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
-        proficiency: "Intermediate",
-        isHost: false
-      }
-    ]
-  },
-  {
-    id: "2",
-    title: "English Conversation Practice",
-    description: "Let's practice everyday English conversation! All levels welcome.",
-    language: "English",
-    level: "Beginner",
-    maxParticipants: 4,
-    currentParticipants: 4,
-    status: "active",
-    createdAt: new Date().toISOString(),
-    members: [
-      {
-        id: "1",
-        name: "Sarah Johnson",
-        // avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
-        proficiency: "Native",
-        isHost: true
-      },
-      {
-        id: "2",
-        name: "Miguel Rodriguez",
-        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
-        proficiency: "Intermediate",
-        isHost: false
-      },
-      {
-        id: "3",
-        name: "Yuki Tanaka",
-        // avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150",
-        proficiency: "Advanced",
-        isHost: false
-      },
-      {
-        id: "4",
-        name: "Hans Weber",
-        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150",
-        proficiency: "Intermediate",
-        isHost: false
-      }
-    ]
-  },
-  {
-    id: "3",
-    title: "English Conversation Practice",
-    description: "Let's practice everyday English conversation! All levels welcome.",
-    language: "English",
-    level: "Advanced",
-    maxParticipants: 10,
-    currentParticipants: 7,
-    status: "active",
-    createdAt: new Date().toISOString(),
-    members: [
-      {
-        id: "1",
-        name: "Sarah Johnson",
-        // avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
-        proficiency: "Native",
-        isHost: true
-      },
-      {
-        id: "2",
-        name: "Miguel Rodriguez",
-        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
-        proficiency: "Intermediate",
-        isHost: false
-      },
-      {
-        id: "3",
-        name: "Yuki Tanaka",
-        avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150",
-        proficiency: "Advanced",
-        isHost: false
-      },
-      {
-        id: "4",
-        name: "Hans Weber",
-        // avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150",
-        proficiency: "Intermediate",
-        isHost: false
-      },
-      {
-        id: "5",
-        name: "Sarah Johnson",
-        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
-        proficiency: "Native",
-        isHost: true
-      },
-      {
-        id: "6",
-        name: "Miguel Rodriguez",
-        // avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
-        proficiency: "Intermediate",
-        isHost: false
-      },
-      {
-        id: "7",
-        name: "Yuki Tanaka",
-        // avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150",
-        proficiency: "Advanced",
-        isHost: false
-      }
-    ]
-  },
-  {
-    id: "4",
-    title: "English Conversation Practice",
-    description: "Let's practice everyday English conversation! All levels welcome.",
-    language: "English",
-    level: "Native",
-    maxParticipants: 3,
-    currentParticipants: 1,
-    status: "active",
-    createdAt: new Date().toISOString(),
-    members: [
-      {
-        id: "1",
-        name: "Sarah Johnson",
-        // avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
-        proficiency: "Native",
-        isHost: true
-      }
-    ]
-  },
-  // Add more mock rooms here
-];
+import { useGetRoomsQuery } from '@/libs/features/room/roomApiSlice';
+import { useSocket } from '@/hooks/useSocket';
+import { isRoomsResponse } from '@/utils/typeGuardsForRoom';
 
 export default function RoomCardList() {
-  const [isOpen, setIsOpen] = useState(false);
+  const { data: initialrooms } = useGetRoomsQuery();
+  console.log("data", initialrooms)
 
-  const handleRoomClick = () => {
-    setIsOpen((prev) => !prev);
-  }
+  const [rooms, setRooms] = useState<RoomType[]>([]);
+  const socket = useSocket();
+
+  useEffect(() => {
+    if (initialrooms && isRoomsResponse(initialrooms)) {
+      setRooms(initialrooms?.data);
+    }
+  }, [initialrooms]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on("roomCreated", (newRoom) => {
+        console.log("new room:", newRoom);
+        setRooms((prev) => [newRoom, ...prev]);
+
+      });
+
+      socket.on("joinedMember", (data) => {
+        console.log("newMember:", data);
+
+        setRooms((prevRooms) => {
+          if (!prevRooms || !Array.isArray(prevRooms)) return prevRooms;
+
+          return prevRooms.map((room) => {
+            if (room.id !== data.roomId) return room;
+
+            // Check if member already exists
+            const memberExists = room.members.some((m) => m.id === data.newMember.id);
+            if (memberExists) return room;
+
+            return {
+              ...room,
+              members: [...room.members, data.newMember],
+            };
+          });
+        });
+      });
+
+      socket.on("removedMember", (data) => {
+        console.log("removedMember:", data);
+
+        setRooms((prevRooms) => {
+          if (!prevRooms || !Array.isArray(prevRooms)) return prevRooms;
+
+          return prevRooms.map((room) => {
+            if (room.id !== data.roomId) return room;
+
+            return {
+              ...room,
+              members: room.members.filter((m) => m.id !== data.memberId),
+            };
+          });
+        });
+      });
+
+    }
+  }, [socket])
 
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
-        {mockRooms.map((room) => (
-          <RoomCard key={room.id} room={room} handler={handleRoomClick} />
+        {rooms.map((room) => (
+          <RoomCard key={room.id} room={room} />
         ))}
       </div>
-      <RoomDetailsModal isOpen={isOpen} handler={handleRoomClick} />
     </>
   )
 }

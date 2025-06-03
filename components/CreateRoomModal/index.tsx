@@ -2,21 +2,20 @@
 import React from "react";
 import Modal from "../common/Modal";
 import Header from "../common/Modal/Header";
-import { CreateQuizModalProps } from "@/types/quizCreateModal";
 import { Formik, Form, FormikHelpers } from "formik";
 import { Users } from "lucide-react";
-import { InitialValues } from "@/types/quizCreateModal";
-import { quizCreationSchema } from "@/schemas";
+import { InitialValues, CreateRoomModalProps } from "@/types/roomCreateModal";
+import { roomCreateSchema } from "@/schemas";
 import { useAppDispatch } from "@/libs/hooks";
 import { closeCreateRoomModal } from "@/libs/features/modal/modalSlice";
-import { useCreateQuizMutation } from "@/libs/features/quiz/quizApiSlice";
 import { toast } from "react-hot-toast";
 import { Field, ErrorMessage } from "formik";
 import FieldContainer from "../ui/FieldContainer";
 import Button from "@/components/ui/Button";
+import { useCreateRoomMutation } from "@/libs/features/room/roomApiSlice";
 
-export default function CreateRoomModal({ isOpen }: CreateQuizModalProps) {
-  const [createQuiz] = useCreateQuizMutation();
+export default function CreateRoomModal({ isOpen }: CreateRoomModalProps) {
+  const [createRoom] = useCreateRoomMutation();
   const dispatch = useAppDispatch();
 
   const onCloseHandler = () => {
@@ -26,18 +25,9 @@ export default function CreateRoomModal({ isOpen }: CreateQuizModalProps) {
   const initialValues: InitialValues = {
     title: "",
     description: "",
-    category: "",
-    duration: 30,
-    difficulty: "Easy",
-    totalMarks: 0,
-    questions: [],
-    currentQuestion: {
-      text: "",
-      type: "single",
-      options: ["", ""],
-      correctAnswer: [],
-      marks: 5,
-    },
+    language: "English",
+    level: "Beginner",
+    maxParticipants: 2,
   };
 
   const doSubmit = async (
@@ -48,20 +38,18 @@ export default function CreateRoomModal({ isOpen }: CreateQuizModalProps) {
       const requestBody = {
         title: values.title,
         description: values.description,
-        category: values.category,
-        difficulty: values.difficulty,
-        duration: values.duration,
-        questions: values.questions,
-        totalMarks: values.totalMarks,
-      }
+        language: values.language,
+        level: values.level,
+        maxParticipants: values.maxParticipants,
+      };
 
-      await createQuiz(requestBody).unwrap();
+      await createRoom(requestBody).unwrap();
 
       onCloseHandler();
-      toast.success("Quiz created successfully!");
+      toast.success("Room created successfully!");
       setSubmitting(false);
     } catch (error) {
-      console.error("Quiz creation failed:", error);
+      console.error("Room creation failed:", error);
     }
   };
 
@@ -73,12 +61,12 @@ export default function CreateRoomModal({ isOpen }: CreateQuizModalProps) {
       <Formik
         initialValues={initialValues}
         onSubmit={doSubmit}
-        validationSchema={quizCreationSchema}
+        validationSchema={roomCreateSchema}
       >
         {({ isSubmitting }) => (
           <Form>
             <div className="p-6 space-y-4">
-              <FieldContainer label="Quiz Title" name="quizTitle">
+              <FieldContainer label="Room Title" name="title">
                 <Field
                   type="text"
                   name="title"
@@ -168,7 +156,7 @@ export default function CreateRoomModal({ isOpen }: CreateQuizModalProps) {
 
             <div className="border-t border-gray-800 p-4 flex justify-between">
               <div className="flex justify-end w-full">
-                <Button isDisabled={isSubmitting}>
+                <Button type="submit" isDisabled={isSubmitting}>
                   Create Room
                 </Button>
               </div>

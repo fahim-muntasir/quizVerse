@@ -1,14 +1,16 @@
 import React, { forwardRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { Users, Globe2, Expand } from 'lucide-react';
 import { RoomType } from '@/types/room';
 import { generateIdenticonAvatar } from '@/utils/generateAvatar';
 
-interface RoomCardProps {
+type RoomCardProps = {
   room: RoomType;
-  handler?: () => void;
 }
 
-export const RoomCard = forwardRef<HTMLDivElement, RoomCardProps>(({ room, handler }, ref) => {
+export const RoomCard = forwardRef<HTMLDivElement, RoomCardProps>(({ room }, ref) => {
+  const router = useRouter();
+
   const levelColors = {
     Beginner: "bg-green-500/10 text-green-500 border-green-500/20",
     Intermediate: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
@@ -38,6 +40,10 @@ export const RoomCard = forwardRef<HTMLDivElement, RoomCardProps>(({ room, handl
     return "w-14 h-14";
   };
 
+  const handleRoomClick = (roomId: string) => {
+    router.push(`/room/${roomId}`);
+  }
+
   return (
     <div
       ref={ref}
@@ -55,11 +61,11 @@ export const RoomCard = forwardRef<HTMLDivElement, RoomCardProps>(({ room, handl
               {room.language}
             </span>
           </div>
-          <h3 className="text-md text-gray-200">{room.title}</h3>
+          <h3 className="text-sm text-gray-400">{room.title}</h3>
         </div>
         <div className="flex items-center gap-1 text-gray-600">
           <Users size={18} />
-          <span>{room.currentParticipants}/{isUnlimited ? "∞" : room.maxParticipants}</span>
+          <span>{room.members.length}/{isUnlimited ? "∞" : room.maxParticipants}</span>
         </div>
       </div>
 
@@ -99,7 +105,7 @@ export const RoomCard = forwardRef<HTMLDivElement, RoomCardProps>(({ room, handl
                     ) : (
                       <div
                         dangerouslySetInnerHTML={{ __html: avatarSvg! }}
-                        className={`${getSizeClasses()} rounded-full shadow-md flex items-center justify-center group-hover:scale-110 overflow-hidden transition-transform`}
+                        className={`${getSizeClasses()} rounded-full border-2 border-dashed border-gray-800 shadow-md flex items-center justify-center group-hover:scale-110 overflow-hidden transition-transform`}
                       />
                     )}
                     <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full mt-1 px-2 py-1 bg-black text-xs text-white rounded-md opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap z-10">
@@ -119,7 +125,7 @@ export const RoomCard = forwardRef<HTMLDivElement, RoomCardProps>(({ room, handl
 
       {/* View Details Button */}
       <button
-        onClick={handler}
+        onClick={() => handleRoomClick(room.id)}
         className="w-full text-gray-200 border border-dashed border-green-500/90 hover:bg-green-500 text-sm py-1 rounded-lg cursor-pointer flex items-center justify-center gap-2"
       >
         <Expand size={18} /> View Details

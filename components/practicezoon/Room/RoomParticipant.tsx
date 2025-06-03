@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { Pin, Volume2, Crown } from 'lucide-react';
 import { generateIdenticonAvatar } from '@/utils/generateAvatar';
 
-export default function RoomParticipant({ member, isLarge = false }: { member: RoomMember; isLarge?: boolean }) {
+export default function RoomParticipant({ member, isLarge = false, hostId }: { member: RoomMember; isLarge?: boolean; hostId: string }) {
   const avatarSvg = member.avatar || generateIdenticonAvatar(member.name, 150);
 
   return (
@@ -46,11 +46,11 @@ export default function RoomParticipant({ member, isLarge = false }: { member: R
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-white text-sm font-medium">{member.name}</span>
-            {member.isHost && (
+            {member.id === hostId && (
               <span className="text-xs px-2 py-0.5 bg-blue-500 rounded-full text-white">Host</span>
             )}
           </div>
-          {member.isHost && <Crown size={16} className="text-yellow-500" />}
+          {member.id === hostId && <Crown size={16} className="text-yellow-500" />}
         </div>
       </div>
     </div>
