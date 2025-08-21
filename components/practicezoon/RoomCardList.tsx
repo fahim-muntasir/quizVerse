@@ -5,9 +5,12 @@ import { RoomType } from '@/types/room'
 import { useGetRoomsQuery } from '@/libs/features/room/roomApiSlice';
 import { useSocket } from '@/hooks/useSocket';
 import { isRoomsResponse } from '@/utils/typeGuardsForRoom';
+import EmptyRoomCard from '../common/EmptyRoomCard';
 
 export default function RoomCardList() {
-  const { data: initialrooms } = useGetRoomsQuery();
+  const { data: initialrooms } = useGetRoomsQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
   console.log("data", initialrooms)
 
   const [rooms, setRooms] = useState<RoomType[]>([]);
@@ -67,6 +70,10 @@ export default function RoomCardList() {
 
     }
   }, [socket])
+
+  if (!rooms || rooms.length === 0) {
+    return <EmptyRoomCard />;
+  }
 
   return (
     <>

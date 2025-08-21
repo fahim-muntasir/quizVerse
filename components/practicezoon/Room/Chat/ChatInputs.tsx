@@ -1,16 +1,40 @@
 'use client';
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation';
 import { Image, Sticker, Film, Send, Book, Smile } from 'lucide-react'
 import { useAppDispatch } from '@/libs/hooks';
 import { openCreateQuizModal } from '@/libs/features/modal/modalSlice';
+import { useCreateChatMutation } from '@/libs/features/chat/chatApiSlice';
+// import { useSocket } from '@/hooks/useSocket';
+import { getSocket } from '@/libs/socket';
 
 export default function ChatInputs() {
   const [msg, setMsg] = useState('');
   const dispatch = useAppDispatch();
+  const { id: roomId } = useParams();
+  const [createChat] = useCreateChatMutation();
+  const socket = getSocket();
 
   const createQuizModalHandler = () => {
     dispatch(openCreateQuizModal());
   }
+
+  const submitHandler = async () => {
+    if (!roomId || Array.isArray(roomId)) {
+      // Optionally handle the error or early return
+      return;
+    }
+    // await createChat({ msg, roomId }).unwrap();
+    socket?.emit("sendMessage", { roomId, message: msg });
+
+    setMsg("");
+  }
+
+  // useEffect(() => {
+  //   socket?.on("sendMessage", (data) => {
+  //     console.log("sendMessage", data);
+  //   })
+  // }, [socket]);
 
   return (
     <div className="h-24 mt-3 px-4 flex items-center border-t border-gray-800">
@@ -47,7 +71,7 @@ export default function ChatInputs() {
 
           {msg &&
             <button className="p-1 hover:bg-green-600 bg-green-500 rounded-full transition-colors">
-              <Send size={16} className="text-white" />
+              <Send size={16} className="text-white" onClick={submitHandler} />
             </button>}
         </div>
       </div>

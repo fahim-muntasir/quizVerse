@@ -5,7 +5,8 @@ import Modal from '../../common/Modal';
 import { Users, Globe2, Crown, DoorOpen, ArrowLeft } from 'lucide-react';
 import { RoomType } from '@/types/room';
 import { useAddRoomMemberMutation } from '@/libs/features/room/roomApiSlice';
-import { useSocket } from '@/hooks/useSocket';
+// import { useSocket } from '@/hooks/useSocket';
+import { getSocket } from '@/libs/socket';
 import { useAppSelector } from '@/libs/hooks';
 
 // Mock data - replace with real data fetching
@@ -51,7 +52,7 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
   const { id } = useParams();
   const roomId = Array.isArray(id) ? id[0] : id;
 
-  const socket = useSocket();
+  const socket = getSocket();
 
   const levelColors = {
     Beginner: "bg-green-500/10 text-green-500 border-green-500/20",
@@ -108,7 +109,7 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
     return () => {
       socket.off("user-joined", handleUserJoined);
       socket.off("user-left", handleUserLeft);
-      console.log("user leaving...");
+      // console.log("user leaving...");
     };
   }, [socket, roomId]);
 

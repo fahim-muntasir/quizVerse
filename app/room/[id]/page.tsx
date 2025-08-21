@@ -9,7 +9,8 @@ import ControlsBar from '@/components/practicezoon/Room/ControlsBar';
 import SidePanel from '@/components/practicezoon/Room/SidePanel';
 import { BackgroundPattern } from '@/components/background/BackgroundPattern';
 import RoomDetailsModal from '@/components/practicezoon/Room/RoomDetailsModal';
-import { useSocket } from '@/hooks/useSocket';
+// import { useSocket } from '@/hooks/useSocket';
+import { getSocket } from '@/libs/socket';
 import { useAppSelector } from '@/libs/hooks';
 import { isRoomResponse } from '@/utils/typeGuardsForRoom';
 
@@ -21,10 +22,12 @@ const VideoConference = () => {
 
   const { id } = useParams();
   const roomId = Array.isArray(id) ? id[0] : id ?? '';
-  const { data: singleRoomData, isSuccess } = useGetSingleRoomQuery(roomId);
+  const { data: singleRoomData, isSuccess, refetch } = useGetSingleRoomQuery(roomId, {
+    refetchOnMountOrArgChange: true,
+  });
 
   const currentUser = useAppSelector((state) => state.auth.user);
-  const socket = useSocket();
+  const socket = getSocket();
   console.log("single room data:", room);
   console.log(isRoomResponse(singleRoomData));
   useEffect(() => {
@@ -60,9 +63,12 @@ const VideoConference = () => {
         members: [...prevRoom.members, user],
       };
     });
+
+    refetch();
   };
 
   const handleUserLeft = async ({ memberId }: { memberId: string }) => {
+    console.log("user left", memberId);
     setRoom((prevRoom) => {
       if (!prevRoom) return prevRoom;
       return {
@@ -71,6 +77,24 @@ const VideoConference = () => {
       };
     });
   };
+
+  useEffect(() => {
+
+    const handleMsg = (data) => {
+      console.log("📩 Got message on client:", data);
+    };
+
+    if (socket) {
+      socket.on("messageReceived", handleMsg);
+    }
+
+    return () => {
+      if (socket) {
+        socket.off("messageReceived", handleMsg);
+      }
+    };
+  }, [socket]);
+
 
   return (
     <div className="flex min-h-screen relative bg-[#1C1C1C]">
