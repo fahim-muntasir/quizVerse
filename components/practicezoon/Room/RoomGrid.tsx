@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import RoomParticipant from './RoomParticipant'
 import { RoomType } from '@/types/room';
 import { useAppSelector } from '@/libs/hooks';
@@ -7,6 +7,11 @@ import ParticipantsQuizModal from '@/components/ParticipantsQuizModal';
 
 export default function RoomGrid({ layout, room, isJoined }: { layout: string, room: RoomType | null, isJoined: boolean }) {
   const { isOpen: createQuizModalIsOpen } = useAppSelector(state => state.modal.createQuizModal);
+    const speakingUsers = useAppSelector(state => state.room.speakingUsers);
+
+  useEffect(() => {
+    console.log("RoomGrid rendered, isJoined:", isJoined);
+  }, [isJoined]);
 
   if (!room) {
     return;
@@ -20,16 +25,16 @@ export default function RoomGrid({ layout, room, isJoined }: { layout: string, r
         }`}>
         {layout === 'spotlight' ? (
           <>
-            <RoomParticipant member={room?.members[0]} isLarge hostId={room.hostId} />
+            <RoomParticipant member={room?.members[0]} isLarge hostId={room.hostId} speakingUsers={speakingUsers} />
             <div className="grid gap-4 grid-cols-1">
               {room?.members.slice(1).map((member) => (
-                <RoomParticipant key={member.id} member={member} hostId={room.hostId} />
+                <RoomParticipant key={member.id} member={member} hostId={room.hostId} speakingUsers={speakingUsers} />
               ))}
             </div>
           </>
         ) : (
           room?.members.map((member) => (
-            <RoomParticipant key={member.id} member={member} hostId={room.hostId} />
+            <RoomParticipant key={member.id} member={member} hostId={room.hostId} speakingUsers={speakingUsers} />
           ))
         )}
 

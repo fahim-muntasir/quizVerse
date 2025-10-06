@@ -4,12 +4,14 @@ import {
   Hand
 } from 'lucide-react';
 import ControlButton from './ControlButton';
+import { useAudioStream } from '@/hooks/useAudioStream';
+import { useAudio } from '@/context/AudioContext';
 
 export default function ControlsBar() {
-  const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isHandRaised, setIsHandRaised] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
+  const { toggleMute, isMuted } = useAudio();
 
   const handleLeaveRoom = async () => {
     window.location.reload();
@@ -34,7 +36,7 @@ export default function ControlsBar() {
         <ControlButton
           icon={isMuted ? MicOff : Mic}
           active={!isMuted}
-          onClick={() => setIsMuted(!isMuted)}
+          onClick={toggleMute}
           label='Mute/Unmute'
         />
         <ControlButton

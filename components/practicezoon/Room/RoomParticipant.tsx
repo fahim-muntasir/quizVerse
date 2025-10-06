@@ -4,11 +4,17 @@ import Image from 'next/image';
 import { Pin, Volume2, Crown } from 'lucide-react';
 import { generateIdenticonAvatar } from '@/utils/generateAvatar';
 
-export default function RoomParticipant({ member, isLarge = false, hostId }: { member: RoomMember; isLarge?: boolean; hostId: string }) {
+export default function RoomParticipant({ member, isLarge = false, hostId, speakingUsers }: { member: RoomMember; isLarge?: boolean; hostId: string; speakingUsers: { [id: string]: boolean } }) {
   const avatarSvg = member.avatar || generateIdenticonAvatar(member.name, 150);
 
+  const isSpeaking = speakingUsers[member.id] === true;
+
   return (
-    <div className={`relative bg-gray-800/50 border border-gray-800 rounded-lg overflow-hidden group ${isLarge ? 'aspect-[16/9]' : 'aspect-video'}`}>
+    <div
+      className={`relative bg-gray-800/50 border rounded-lg overflow-hidden group 
+        ${isLarge ? 'aspect-[16/9]' : 'aspect-video'} 
+        ${isSpeaking ? 'border border-green-500 animate-pulse' : 'border-gray-800'}`}
+    >
       {/* Centered Image */}
       {member.avatar ? (
         <div className="absolute inset-0 flex items-center justify-center">

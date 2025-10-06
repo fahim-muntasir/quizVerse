@@ -1,15 +1,21 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Modal from '../../common/Modal';
-import { Users, Globe2, Crown, DoorOpen, ArrowLeft } from 'lucide-react';
+import { Users, Globe2, Crown, DoorOpen, ArrowLeft, Mic, MicOff } from 'lucide-react';
 import { RoomType } from '@/types/room';
 import { useAddRoomMemberMutation } from '@/libs/features/room/roomApiSlice';
-// import { useSocket } from '@/hooks/useSocket';
 import { getSocket } from '@/libs/socket';
-import { useAppSelector } from '@/libs/hooks';
+import { useAppDispatch, useAppSelector } from "@/libs/hooks";
+import {
+  setAudioEnabled,
+  setMuted,
+  setSpeakingUser,
+  removeSpeakingUser,
+} from "@/libs/features/room/roomSlice";
+import { useAudioStream } from '@/hooks/useAudioStream';
+import { useAudio } from '@/context/AudioContext';
 
-// Mock data - replace with real data fetching
 const mockRoom: RoomType = {
   id: "1",
   title: "English Conversation Practice",
@@ -44,6 +50,9 @@ const mockRoom: RoomType = {
   ]
 };
 
+const peers: { [id: string]: RTCPeerConnection } = {};
+const remoteAudioElements: { [id: string]: HTMLAudioElement } = {};
+
 export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, handleUserLeft }: { isOpen: boolean, onClose: () => void, handleUserJoined: (data: { user: { id: string, name: string } }) => void, handleUserLeft: (data: { memberId: string }) => void }) {
   const [addRoomMember, { isLoading }] = useAddRoomMemberMutation();
   const currentUser = useAppSelector(state => state.auth.user);
@@ -51,6 +60,11 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
   const router = useRouter();
   const { id } = useParams();
   const roomId = Array.isArray(id) ? id[0] : id;
+  // const localStreamRef = useRef<MediaStream | null>(null);
+  const hasJoinedRoom = useRef(false);
+  // const { startAudio, stopAudio, localStreamRef} = useAudioStream(currentUser?.id);
+  const { startAudio, stopAudio, localStreamRef} = useAudio();
+  const { toggleMute, isMuted } = useAudioStream();
 
   const socket = getSocket();
 
@@ -59,6 +73,30 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
     Intermediate: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
     Advanced: "bg-orange-500/10 text-orange-500 border-orange-500/20",
     Native: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  };
+
+  const createPeerConnection = (socketId: string, stream: MediaStream) => {
+    if (peers[socketId]) return peers[socketId];
+    const pc = new RTCPeerConnection();
+
+    stream.getTracks().forEach(track => pc.addTrack(track, stream));
+
+    pc.ontrack = (event) => {
+      const audio = document.createElement("audio");
+      audio.srcObject = event.streams[0];
+      audio.autoplay = true;
+      document.body.appendChild(audio);
+      remoteAudioElements[socketId] = audio;
+    };
+
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        socket.emit("ice-candidate", { to: socketId, candidate: event.candidate });
+      }
+    };
+
+    peers[socketId] = pc;
+    return pc;
   };
 
   const joinRoomHandler = async () => {
@@ -85,7 +123,12 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
 
     try {
       await joinPromise;
+      hasJoinedRoom.current = true;
 
+      // Start audio stream after successfully joining
+      await startAudio(currentUser?.id || "");
+
+      // Emit join-room event with audio enabled
       socket?.emit('join-room', {
         roomId,
         user: {
@@ -97,23 +140,113 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
       onClose();
     } catch (error) {
       console.error('Join room failed:', error);
+      hasJoinedRoom.current = false;
     }
   };
 
   useEffect(() => {
-    if (!socket || !roomId) return;
+    if (!socket || !roomId || !hasJoinedRoom.current) return;
 
-    socket.on("user-joined", handleUserJoined);
-    socket.on("user-left", handleUserLeft);
+    socket.on("user-joined", async ({ user, socketId }) => {
+      handleUserJoined({ user });
+      if (socketId === socket.id) return;
+
+      // Only create peer connection if we have audio enabled
+      if (localStreamRef.current) {
+        const pc = createPeerConnection(socketId, localStreamRef.current);
+
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        socket.emit("offer", { to: socketId, offer });
+      }
+    });
+
+    socket.on("user-left", ({ memberId, socketId }) => {
+      handleUserLeft({ memberId });
+
+      if (peers[socketId]) {
+        peers[socketId].close();
+        delete peers[socketId];
+      }
+
+      if (remoteAudioElements[socketId]) {
+        const stream = remoteAudioElements[socketId].srcObject as MediaStream | null;
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop());
+        }
+
+        document.body.removeChild(remoteAudioElements[socketId]);
+        delete remoteAudioElements[socketId];
+      }
+    });
 
     return () => {
-      socket.off("user-joined", handleUserJoined);
-      socket.off("user-left", handleUserLeft);
-      // console.log("user leaving...");
+      socket.off("user-joined");
+      socket.off("user-left");
     };
-  }, [socket, roomId]);
+  }, [socket, roomId, hasJoinedRoom.current]);
+
+  useEffect(() => {
+    if (!socket || !roomId || !hasJoinedRoom.current) return;
+
+    socket.on("offer", async ({ from, offer }) => {
+      let pc = peers[from];
+      if (!pc && localStreamRef.current) {
+        pc = createPeerConnection(from, localStreamRef.current);
+      }
+
+      if (pc) {
+        await pc.setRemoteDescription(new RTCSessionDescription(offer));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        socket.emit("answer", { to: from, answer });
+      }
+    });
+
+    socket.on("answer", async ({ from, answer }) => {
+      const pc = peers[from];
+      if (pc && pc.signalingState === "have-local-offer") {
+        await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      }
+    });
+
+    socket.on("ice-candidate", async ({ from, candidate }) => {
+      const pc = peers[from];
+      if (pc) {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      }
+    });
+
+    return () => {
+      socket.off("offer");
+      socket.off("answer");
+      socket.off("ice-candidate");
+    };
+  }, [socket, roomId, hasJoinedRoom.current]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopAudio(currentUser?.id || "");
+      Object.keys(peers).forEach(socketId => {
+        peers[socketId].close();
+        delete peers[socketId];
+      });
+      Object.keys(remoteAudioElements).forEach(socketId => {
+        const stream = remoteAudioElements[socketId].srcObject as MediaStream | null;
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop());
+        }
+        if (remoteAudioElements[socketId].parentNode) {
+          document.body.removeChild(remoteAudioElements[socketId]);
+        }
+        delete remoteAudioElements[socketId];
+      });
+    };
+  }, []);
 
   const handleBackToHome = () => {
+    stopAudio(currentUser?.id || "");
     router.push(`/practicezoon`);
   }
 
@@ -123,7 +256,7 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
 
   return (
     <Modal>
-      <div className=" p-6">
+      <div className="p-6">
         <div className="max-w-4xl mx-auto">
           <div className="p-4">
             <div className="flex justify-between items-start mb-8">
@@ -144,13 +277,15 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{room.title}</h1>
                 <p className="text-gray-600 dark:text-gray-400">{room.description}</p>
               </div>
-              <button
-                className="bg-green-500/90 hover:bg-green-500 text-white px-6 py-2 rounded-lg transition-colors flex items-center gap-1"
-                disabled={isLoading}
-                onClick={joinRoomHandler}
-              >
-                <DoorOpen />Join Room
-              </button>
+              <div className="flex gap-2">
+                <button
+                  className="bg-green-500/90 hover:bg-green-500 text-white px-6 py-2 rounded-lg transition-colors flex items-center gap-2"
+                  disabled={isLoading}
+                  onClick={joinRoomHandler}
+                >
+                  <DoorOpen size={20} />Join Room
+                </button>
+              </div>
             </div>
 
             <div className="border-t dark:border-gray-700 pt-8 mb-8">
@@ -170,9 +305,6 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
                           <Crown size={16} className="text-yellow-500" />
                         )}
                       </div>
-                      {/* <span className={`text-sm ${levelColors[member.proficiency]} px-2 py-0.5 rounded-full`}>
-                        {member.proficiency}
-                      </span> */}
                     </div>
                   </div>
                 ))}
@@ -182,7 +314,7 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
             <div className="border-t dark:border-gray-700 pt-8">
               <button
                 onClick={handleBackToHome}
-                className="bg-red-500/90 hover:bg-red-500 text-white px-6 py-2 rounded-lg transition-colors flex items-center gap-1"
+                className="bg-red-500/90 hover:bg-red-500 text-white px-6 py-2 rounded-lg transition-colors flex items-center gap-2"
               >
                 <ArrowLeft size={20} /> <span>Back to Home</span>
               </button>

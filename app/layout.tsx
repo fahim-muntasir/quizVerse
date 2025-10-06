@@ -3,6 +3,7 @@ import { DM_Sans, Goldman } from "next/font/google";
 import StoreProvider from "@/components/StoreProvider";
 import { Toaster } from "react-hot-toast";
 import { AuthChecker } from "@/components/AuthChecker";
+import { AudioProvider } from "@/context/AudioContext";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -31,7 +32,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={` ${dmSans.variable} ${goldman.variable} antialiased`}>
         <StoreProvider>
-          <AuthChecker>{children}</AuthChecker>
+          <AuthChecker><AudioProvider>{children}</AudioProvider></AuthChecker>
         </StoreProvider>
         <Toaster position="top-right" reverseOrder={false} />
         <div id="modal-portal"></div>

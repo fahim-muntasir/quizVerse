@@ -3,10 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useGetSingleRoomQuery } from '@/libs/features/room/roomApiSlice';
 import { RoomType } from '@/types/room';
-import TopBar from '@/components/practicezoon/Room/TopBar';
-import RoomGrid from '@/components/practicezoon/Room/RoomGrid';
-import ControlsBar from '@/components/practicezoon/Room/ControlsBar';
-import SidePanel from '@/components/practicezoon/Room/SidePanel';
+import RoomLayout from '@/components/practicezoon/Room/RoomLayout';
 import { BackgroundPattern } from '@/components/background/BackgroundPattern';
 import RoomDetailsModal from '@/components/practicezoon/Room/RoomDetailsModal';
 // import { useSocket } from '@/hooks/useSocket';
@@ -79,7 +76,6 @@ const VideoConference = () => {
   };
 
   useEffect(() => {
-
     const handleMsg = (data) => {
       console.log("📩 Got message on client:", data);
     };
@@ -102,23 +98,13 @@ const VideoConference = () => {
       <RoomDetailsModal isOpen={isJoined} onClose={() => setIsJoined(true)} handleUserJoined={handleUserJoined} handleUserLeft={handleUserLeft} />
 
       <BackgroundPattern />
-      {/* Main content */}
-      <div className="flex-1 flex flex-col">
-        {/* Top bar */}
-        <TopBar room={room} />
-
-        {/* Video grid */}
-        <RoomGrid layout={layout} room={room} isJoined={isJoined} />
-
-        {/* Controls */}
-        <ControlsBar />
-      </div>
-
-      {/* Side panel */}
-      <SidePanel
+      {isJoined && <RoomLayout
+        room={room}
+        layout={layout}
+        isJoined={isJoined}
         sidebarCollapsed={sidebarCollapsed}
         setSidebarCollapsed={setSidebarCollapsed}
-      />
+      />}
     </div>
   );
 };
