@@ -1,19 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Modal from '../../common/Modal';
-import { Users, Globe2, Crown, DoorOpen, ArrowLeft, Mic, MicOff } from 'lucide-react';
+import { Users, Globe2, Crown, DoorOpen, ArrowLeft } from 'lucide-react';
 import { RoomType } from '@/types/room';
 import { useAddRoomMemberMutation } from '@/libs/features/room/roomApiSlice';
 import { getSocket } from '@/libs/socket';
-import { useAppDispatch, useAppSelector } from "@/libs/hooks";
-import {
-  setAudioEnabled,
-  setMuted,
-  setSpeakingUser,
-  removeSpeakingUser,
-} from "@/libs/features/room/roomSlice";
-import { useAudioStream } from '@/hooks/useAudioStream';
+import { useAppSelector } from "@/libs/hooks";
 import { useAudio } from '@/context/AudioContext';
 
 const mockRoom: RoomType = {
@@ -64,7 +57,6 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
   const hasJoinedRoom = useRef(false);
   // const { startAudio, stopAudio, localStreamRef} = useAudioStream(currentUser?.id);
   const { startAudio, stopAudio, localStreamRef} = useAudio();
-  const { toggleMute, isMuted } = useAudioStream();
 
   const socket = getSocket();
 
@@ -126,7 +118,7 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
       hasJoinedRoom.current = true;
 
       // Start audio stream after successfully joining
-      await startAudio(currentUser?.id || "");
+      await startAudio(currentUser?.id || "", roomId);
 
       // Emit join-room event with audio enabled
       socket?.emit('join-room', {

@@ -8,6 +8,7 @@ export default function RoomParticipant({ member, isLarge = false, hostId, speak
   const avatarSvg = member.avatar || generateIdenticonAvatar(member.name, 150);
 
   const isSpeaking = speakingUsers[member.id] === true;
+  console.log(`RoomParticipant: ${member.name} isSpeaking:`, isSpeaking);
 
   return (
     <div

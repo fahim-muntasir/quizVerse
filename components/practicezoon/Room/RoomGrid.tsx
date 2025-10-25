@@ -4,10 +4,13 @@ import { RoomType } from '@/types/room';
 import { useAppSelector } from '@/libs/hooks';
 import CreateQuizModal from '@/components/CreateQuizModal';
 import ParticipantsQuizModal from '@/components/ParticipantsQuizModal';
+import { useSpeakingEvents } from '@/hooks/useSpeakingEvents';
 
 export default function RoomGrid({ layout, room, isJoined }: { layout: string, room: RoomType | null, isJoined: boolean }) {
   const { isOpen: createQuizModalIsOpen } = useAppSelector(state => state.modal.createQuizModal);
-    const speakingUsers = useAppSelector(state => state.room.speakingUsers);
+  const speakingUsers = useAppSelector(state => state.room.speakingUsers);
+
+  useSpeakingEvents(room?.id || "");
 
   useEffect(() => {
     console.log("RoomGrid rendered, isJoined:", isJoined);
