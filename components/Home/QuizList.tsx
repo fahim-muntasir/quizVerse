@@ -40,7 +40,7 @@ export default function QuizList() {
 
       dispatch(setAllQuizzes(updatedQuiz));
     }
-  }, [isSuccess, isValidResponse, quizzes, dispatch]);
+  }, [isSuccess, isValidResponse, quizzes, dispatch, allQuizzes]);
 
   const observer = useRef<IntersectionObserver | null>(null);
 
@@ -58,7 +58,7 @@ export default function QuizList() {
 
       if (node) observer.current.observe(node);
     },
-    [page, quizzes]  // Add `page` and `quizzes` as dependencies
+    [page, quizzes, isValidResponse]  // Add `page` and `quizzes` as dependencies
   );
 
   // Helper function to render quiz cards

@@ -41,7 +41,7 @@ export default function CreatedQuizList() {
   useEffect(() => {
     setPage(1);
     dispatch(setUserQuizzes([]));
-  }, [searchQuery]);
+  }, [searchQuery, dispatch]);
 
   // Append new quizzes when API fetch is successful
   useEffect(() => {
@@ -57,7 +57,7 @@ export default function CreatedQuizList() {
         dispatch(setUserQuizzes(allUserQuizzes));
       }
     }
-  }, [isSuccess, isValidResponse, quizzes, page]);
+  }, [isSuccess, isValidResponse, quizzes, page, dispatch, userQuizzes]);
 
   // Infinite Scroll Intersection Observer
   const observer = useRef<IntersectionObserver | null>(null);
@@ -74,7 +74,7 @@ export default function CreatedQuizList() {
       });
       if (node) observer.current.observe(node);
     },
-    [page, quizzes]
+    [page, quizzes, isValidResponse]
   );
 
   // Render Quiz Cards
@@ -101,7 +101,7 @@ export default function CreatedQuizList() {
           {isError && <Error msg="Error fetching quizzes" />}
         </div>
       </div>
-      <ParticipantsQuizModal page={page} />
+      <ParticipantsQuizModal />
     </>
   );
 }

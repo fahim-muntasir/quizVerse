@@ -61,6 +61,7 @@ export default function ChatInputs() {
                 <Film size={18} className="text-gray-300" />
               </button>
               <button className="p-1 hover:bg-[#343434] rounded-full transition-colors">
+                {/* eslint-disable-next-line jsx-a11y/alt-text */}
                 <Image size={18} className="text-gray-300" />
               </button>
               {/* Quiz Button */}

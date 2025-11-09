@@ -17,7 +17,7 @@ export default function TopBar({ room }: { room: RoomType | null }) {
         <span className="text-sm px-2 py-1 bg-gray-800/50 rounded-full text-gray-300">
           {room?.language}
         </span>
-        <span className={`text-sm px-2 py-1 rounded-full border ${levelColors[room?.level]}`}>
+        <span className={`text-sm px-2 py-1 rounded-full border ${room?.level ? levelColors[room.level as keyof typeof levelColors] : ""}`}>
           {room?.level}
         </span>
       </div>
