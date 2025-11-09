@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Modal from '../../common/Modal';
@@ -8,6 +8,7 @@ import { useAddRoomMemberMutation } from '@/libs/features/room/roomApiSlice';
 import { getSocket } from '@/libs/socket';
 import { useAppSelector } from "@/libs/hooks";
 import { useAudio } from '@/context/AudioContext';
+import Image from 'next/image';
 
 const mockRoom: RoomType = {
   id: "1",
@@ -56,7 +57,7 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
   // const localStreamRef = useRef<MediaStream | null>(null);
   const hasJoinedRoom = useRef(false);
   // const { startAudio, stopAudio, localStreamRef} = useAudioStream(currentUser?.id);
-  const { startAudio, stopAudio, localStreamRef} = useAudio();
+  const { startAudio, stopAudio, localStreamRef } = useAudio();
 
   const socket = getSocket();
 
@@ -67,7 +68,31 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
     Native: "bg-blue-500/10 text-blue-500 border-blue-500/20",
   };
 
-  const createPeerConnection = (socketId: string, stream: MediaStream) => {
+  // const createPeerConnection = (socketId: string, stream: MediaStream) => {
+  //   if (peers[socketId]) return peers[socketId];
+  //   const pc = new RTCPeerConnection();
+
+  //   stream.getTracks().forEach(track => pc.addTrack(track, stream));
+
+  //   pc.ontrack = (event) => {
+  //     const audio = document.createElement("audio");
+  //     audio.srcObject = event.streams[0];
+  //     audio.autoplay = true;
+  //     document.body.appendChild(audio);
+  //     remoteAudioElements[socketId] = audio;
+  //   };
+
+  //   pc.onicecandidate = (event) => {
+  //     if (event.candidate) {
+  //       socket.emit("ice-candidate", { to: socketId, candidate: event.candidate });
+  //     }
+  //   };
+
+  //   peers[socketId] = pc;
+  //   return pc;
+  // };
+
+  const createPeerConnection = useCallback((socketId: string, stream: MediaStream) => {
     if (peers[socketId]) return peers[socketId];
     const pc = new RTCPeerConnection();
 
@@ -89,7 +114,7 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
 
     peers[socketId] = pc;
     return pc;
-  };
+  }, [socket]);
 
   const joinRoomHandler = async () => {
     if (!roomId) {
@@ -176,7 +201,7 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
       socket.off("user-joined");
       socket.off("user-left");
     };
-  }, [socket, roomId, hasJoinedRoom.current]);
+  }, [socket, roomId, createPeerConnection, handleUserJoined, handleUserLeft, localStreamRef]);
 
   useEffect(() => {
     if (!socket || !roomId || !hasJoinedRoom.current) return;
@@ -214,7 +239,7 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
       socket.off("answer");
       socket.off("ice-candidate");
     };
-  }, [socket, roomId, hasJoinedRoom.current]);
+  }, [socket, roomId, createPeerConnection, localStreamRef]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -235,7 +260,7 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
         delete remoteAudioElements[socketId];
       });
     };
-  }, []);
+  }, [stopAudio, currentUser?.id]);
 
   const handleBackToHome = () => {
     stopAudio(currentUser?.id || "");
@@ -285,9 +310,16 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {room.members.map((member) => (
                   <div key={member.id} className="flex items-center gap-4 p-4 bg-gray-800/50 rounded-lg">
-                    <img
+                    {/* <img
                       src={member.avatar}
                       alt={member.name}
+                      className="w-12 h-12 rounded-full"
+                    /> */}
+                    <Image
+                      src={member.avatar || ""}
+                      alt={member.name}
+                      width={48}
+                      height={48}
                       className="w-12 h-12 rounded-full"
                     />
                     <div>

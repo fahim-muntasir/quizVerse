@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { Users, Globe2, Expand } from 'lucide-react';
 import { RoomType } from '@/types/room';
 import { generateIdenticonAvatar } from '@/utils/generateAvatar';
+import Image from 'next/image';
 
 type RoomCardProps = {
   room: RoomType;
@@ -77,9 +78,11 @@ export const RoomCard = forwardRef<HTMLDivElement, RoomCardProps>(({ room }, ref
         {isUnlimited ? (
           room.members.map((member) => (
             <div key={member.id} className="relative group">
-              <img
-                src={member.avatar}
+              <Image
+                src={member.avatar || ""}
                 alt={member.name}
+                width={56}
+                height={56}
                 className="w-14 h-14 rounded-full object-cover border-2 border-gray-800 shadow-md group-hover:scale-110 transition-transform"
               />
               <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full mt-1 px-2 py-1 bg-black text-xs text-white rounded-md opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap z-10">
@@ -97,9 +100,11 @@ export const RoomCard = forwardRef<HTMLDivElement, RoomCardProps>(({ room }, ref
                 {member ? (
                   <>
                     {member.avatar ? (
-                      <img
+                      <Image
                         src={member.avatar}
                         alt={member.name}
+                        width={56}
+                        height={56}
                         className={`${getSizeClasses()} rounded-full object-cover border-2 border-gray-800 shadow-md group-hover:scale-110 transition-transform`}
                       />
                     ) : (

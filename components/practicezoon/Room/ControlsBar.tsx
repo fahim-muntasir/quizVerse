@@ -4,7 +4,7 @@ import {
   Hand
 } from 'lucide-react';
 import ControlButton from './ControlButton';
-import { useAudioStream } from '@/hooks/useAudioStream';
+// import { useAudioStream } from '@/hooks/useAudioStream';
 import { useAudio } from '@/context/AudioContext';
 
 export default function ControlsBar() {

@@ -1,10 +1,10 @@
 'use client';
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useParams } from 'next/navigation';
 import { Image, Sticker, Film, Send, Book, Smile } from 'lucide-react'
 import { useAppDispatch } from '@/libs/hooks';
 import { openCreateQuizModal } from '@/libs/features/modal/modalSlice';
-import { useCreateChatMutation } from '@/libs/features/chat/chatApiSlice';
+// import { useCreateChatMutation } from '@/libs/features/chat/chatApiSlice';
 // import { useSocket } from '@/hooks/useSocket';
 import { getSocket } from '@/libs/socket';
 
@@ -12,7 +12,7 @@ export default function ChatInputs() {
   const [msg, setMsg] = useState('');
   const dispatch = useAppDispatch();
   const { id: roomId } = useParams();
-  const [createChat] = useCreateChatMutation();
+  // const [createChat] = useCreateChatMutation();
   const socket = getSocket();
 
   const createQuizModalHandler = () => {

@@ -76,20 +76,24 @@ const VideoConference = () => {
   };
 
   useEffect(() => {
-    const handleMsg = (data) => {
-      console.log("📩 Got message on client:", data);
-    };
+    setLayout('grid');
+  }, []);
 
-    if (socket) {
-      socket.on("messageReceived", handleMsg);
-    }
+  // useEffect(() => {
+  //   const handleMsg = (data) => {
+  //     console.log("📩 Got message on client:", data);
+  //   };
 
-    return () => {
-      if (socket) {
-        socket.off("messageReceived", handleMsg);
-      }
-    };
-  }, [socket]);
+  //   if (socket) {
+  //     socket.on("messageReceived", handleMsg);
+  //   }
+
+  //   return () => {
+  //     if (socket) {
+  //       socket.off("messageReceived", handleMsg);
+  //     }
+  //   };
+  // }, [socket]);
 
 
   return (
