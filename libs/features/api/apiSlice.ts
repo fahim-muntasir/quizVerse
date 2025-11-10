@@ -5,7 +5,7 @@ export const apiSlice = createApi({
   reducerPath: "api",
   baseQuery: async (args, api, extraOptions) => {
     const baseQuery = fetchBaseQuery({
-      baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api/v1`,
+      baseUrl: `/api/v1`,
       prepareHeaders: (headers) => {
         try {
           const auth = JSON.parse(localStorage.getItem("auth") || "{}");
