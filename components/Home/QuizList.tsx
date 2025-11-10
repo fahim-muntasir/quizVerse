@@ -40,7 +40,8 @@ export default function QuizList() {
 
       dispatch(setAllQuizzes(updatedQuiz));
     }
-  }, [isSuccess, isValidResponse, quizzes, dispatch, allQuizzes]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSuccess, isValidResponse, quizzes]);
 
   const observer = useRef<IntersectionObserver | null>(null);
 
