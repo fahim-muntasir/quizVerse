@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { apiSlice } from "../api/apiSlice";
 import { CreateResultType } from "@/types/result";
 import { quizApiSlice } from "../quiz/quizApiSlice";
@@ -20,7 +21,7 @@ export const resultApiSlice = apiSlice.injectEndpoints({
       // invalidatesTags: ["Quizzes", "UserQuizzes"],
       async onQueryStarted(arg, { dispatch, queryFulfilled, getState }) {
         try {
-          const { data: createdResult } = await queryFulfilled;
+          const { data: createdResult }: any = await queryFulfilled;
 
           const state: any = getState();
 
