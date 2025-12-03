@@ -11,6 +11,7 @@ export function useSpeakingEvents(roomId: string) {
     if (!socket) return;
 
     const handleSpeaking = ({ userId, speaking }: { userId: string; speaking: boolean }) => {
+      console.log(`User ${userId} is ${speaking ? "speaking" : "not speaking"}`);
       if (speaking) dispatch(setSpeakingUser(userId));
       else dispatch(removeSpeakingUser(userId));
     };

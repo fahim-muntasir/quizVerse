@@ -6,12 +6,17 @@ import {
 import ControlButton from './ControlButton';
 // import { useAudioStream } from '@/hooks/useAudioStream';
 import { useAudio } from '@/context/AudioContext';
+import { useAppSelector } from '@/libs/hooks';
+import { useParams } from 'next/navigation';
 
 export default function ControlsBar() {
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isHandRaised, setIsHandRaised] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
   const { toggleMute, isMuted } = useAudio();
+  const currentUser = useAppSelector(state => state.auth.user);
+  const { id } = useParams();
+  const roomId = Array.isArray(id) ? (id[0] ?? '') : (id ?? '');
 
   const handleLeaveRoom = async () => {
     window.location.reload();
@@ -36,7 +41,7 @@ export default function ControlsBar() {
         <ControlButton
           icon={isMuted ? MicOff : Mic}
           active={!isMuted}
-          onClick={toggleMute}
+          onClick={() => toggleMute(roomId, currentUser?.id || '')}
           label='Mute/Unmute'
         />
         <ControlButton

@@ -31,6 +31,21 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
+            set -euo pipefail
             cd /srv/myapp
-            docker-compose pull frontend
-            docker-compose up -d frontend
+
+            if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+              DC="docker compose"
+            else
+              DC="docker-compose"
+            fi
+
+            $DC pull frontend || true
+            $DC up -d --no-deps --force-recreate frontend || {
+              echo "force-recreate failed; trying safe restart..."
+              $DC stop frontend || true
+              $DC rm -f frontend || true
+              $DC pull frontend
+              $DC up -d --no-deps frontend
+            }
+

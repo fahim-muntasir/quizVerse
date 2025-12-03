@@ -8,12 +8,14 @@ interface RoomState {
   isAudioEnabled: boolean;
   isMuted: boolean;
   speakingUsers: SpeakingUsersState;
+  mutedUsers: SpeakingUsersState;
 }
 
 const initialState: RoomState = {
   isAudioEnabled: false,
   isMuted: false,
   speakingUsers: {},
+  mutedUsers: {},
 };
 
 const roomSlice = createSlice({
@@ -32,8 +34,17 @@ const roomSlice = createSlice({
     removeSpeakingUser: (state, action: PayloadAction<string>) => {
       delete state.speakingUsers[action.payload];
     },
+    setMutedUser: (state, action: PayloadAction<string>) => {
+      state.mutedUsers[action.payload] = true;
+    },
+    removeMutedUser: (state, action: PayloadAction<string>) => {
+      delete state.mutedUsers[action.payload];
+    },
     clearSpeakingUsers: (state) => {
       state.speakingUsers = {};
+    },
+    clearMutedUsers: (state) => {
+      state.mutedUsers = {};
     }
   },
 });
@@ -44,6 +55,9 @@ export const {
   setSpeakingUser,
   removeSpeakingUser,
   clearSpeakingUsers,
+  setMutedUser,
+  removeMutedUser,
+  clearMutedUsers,
 } = roomSlice.actions;
 
 export default roomSlice.reducer;

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import RoomParticipant from './RoomParticipant'
 import { RoomType } from '@/types/room';
 import { useAppSelector } from '@/libs/hooks';
@@ -12,12 +12,8 @@ export default function RoomGrid({ layout, room, isJoined }: { layout: string, r
 
   useSpeakingEvents(room?.id || "");
 
-  useEffect(() => {
-    console.log("RoomGrid rendered, isJoined:", isJoined);
-  }, [isJoined]);
-
   if (!room) {
-    return;
+    return null;
   }
 
   return (

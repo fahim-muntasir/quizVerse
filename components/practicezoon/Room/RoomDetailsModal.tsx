@@ -44,19 +44,30 @@ const mockRoom: RoomType = {
   ]
 };
 
+// Store peers outside component to persist across renders
 const peers: { [id: string]: RTCPeerConnection } = {};
 const remoteAudioElements: { [id: string]: HTMLAudioElement } = {};
 
-export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, handleUserLeft }: { isOpen: boolean, onClose: () => void, handleUserJoined: (data: { user: { id: string, name: string } }) => void, handleUserLeft: (data: { memberId: string }) => void }) {
+export default function RoomDetailsModal({ 
+  isOpen, 
+  onClose, 
+  handleUserJoined, 
+  handleUserLeft 
+}: { 
+  isOpen: boolean, 
+  onClose: () => void, 
+  handleUserJoined: (data: { user: { id: string, name: string } }) => void, 
+  handleUserLeft: (data: { memberId: string }) => void 
+}) {
   const [addRoomMember, { isLoading }] = useAddRoomMemberMutation();
   const currentUser = useAppSelector(state => state.auth.user);
   const room = mockRoom;
   const router = useRouter();
   const { id } = useParams();
   const roomId = Array.isArray(id) ? id[0] : id;
-  // const localStreamRef = useRef<MediaStream | null>(null);
   const hasJoinedRoom = useRef(false);
-  // const { startAudio, stopAudio, localStreamRef} = useAudioStream(currentUser?.id);
+  
+  // Use the audio context hook
   const { startAudio, stopAudio, localStreamRef } = useAudio();
 
   const socket = getSocket();
@@ -68,47 +79,44 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
     Native: "bg-blue-500/10 text-blue-500 border-blue-500/20",
   };
 
-  // const createPeerConnection = (socketId: string, stream: MediaStream) => {
-  //   if (peers[socketId]) return peers[socketId];
-  //   const pc = new RTCPeerConnection();
-
-  //   stream.getTracks().forEach(track => pc.addTrack(track, stream));
-
-  //   pc.ontrack = (event) => {
-  //     const audio = document.createElement("audio");
-  //     audio.srcObject = event.streams[0];
-  //     audio.autoplay = true;
-  //     document.body.appendChild(audio);
-  //     remoteAudioElements[socketId] = audio;
-  //   };
-
-  //   pc.onicecandidate = (event) => {
-  //     if (event.candidate) {
-  //       socket.emit("ice-candidate", { to: socketId, candidate: event.candidate });
-  //     }
-  //   };
-
-  //   peers[socketId] = pc;
-  //   return pc;
-  // };
-
-  const createPeerConnection = useCallback((socketId: string, stream: MediaStream) => {
+  // Create peer connection with ICE servers
+  const createPeerConnection = useCallback((socketId: string, stream: MediaStream | null) => {
     if (peers[socketId]) return peers[socketId];
-    const pc = new RTCPeerConnection();
+    
+    const configuration = {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+      ]
+    };
+    
+    const pc = new RTCPeerConnection(configuration);
 
-    stream.getTracks().forEach(track => pc.addTrack(track, stream));
+    // Only add tracks if stream exists (user has unmuted and has microphone)
+    if (stream) {
+      stream.getTracks().forEach(track => pc.addTrack(track, stream));
+    }
 
     pc.ontrack = (event) => {
+      console.log('Received remote track from', socketId);
       const audio = document.createElement("audio");
       audio.srcObject = event.streams[0];
       audio.autoplay = true;
+      audio.id = `audio-${socketId}`;
       document.body.appendChild(audio);
       remoteAudioElements[socketId] = audio;
     };
 
     pc.onicecandidate = (event) => {
       if (event.candidate) {
-        socket.emit("ice-candidate", { to: socketId, candidate: event.candidate });
+        socket?.emit("ice-candidate", { to: socketId, candidate: event.candidate });
+      }
+    };
+
+    pc.onconnectionstatechange = () => {
+      console.log(`Peer connection state with ${socketId}:`, pc.connectionState);
+      if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+        console.log(`Connection ${pc.connectionState} with ${socketId}`);
       }
     };
 
@@ -116,9 +124,34 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
     return pc;
   }, [socket]);
 
+  // Cleanup peer connection
+  const cleanupPeerConnection = useCallback((socketId: string) => {
+    if (peers[socketId]) {
+      peers[socketId].close();
+      delete peers[socketId];
+    }
+
+    if (remoteAudioElements[socketId]) {
+      const stream = remoteAudioElements[socketId].srcObject as MediaStream | null;
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+
+      if (remoteAudioElements[socketId].parentNode) {
+        document.body.removeChild(remoteAudioElements[socketId]);
+      }
+      delete remoteAudioElements[socketId];
+    }
+  }, []);
+
   const joinRoomHandler = async () => {
     if (!roomId) {
       toast.error('Room ID is missing.');
+      return;
+    }
+
+    if (!currentUser?.id) {
+      toast.error('User not authenticated.');
       return;
     }
 
@@ -142,15 +175,15 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
       await joinPromise;
       hasJoinedRoom.current = true;
 
-      // Start audio stream after successfully joining
-      await startAudio(currentUser?.id || "", roomId);
+      // Start audio (muted by default, no microphone access yet)
+      await startAudio(currentUser.id, roomId);
 
-      // Emit join-room event with audio enabled
+      // Emit join-room event
       socket?.emit('join-room', {
         roomId,
         user: {
-          id: currentUser?.id,
-          name: currentUser?.fullName
+          id: currentUser.id,
+          name: currentUser.fullName
         },
       });
 
@@ -161,54 +194,55 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
     }
   };
 
+  // Handle user-joined and user-left events
   useEffect(() => {
     if (!socket || !roomId || !hasJoinedRoom.current) return;
 
-    socket.on("user-joined", async ({ user, socketId }) => {
+    const handleUserJoinedEvent = async ({ user, socketId }: { user: { id: string, name: string }, socketId: string }) => {
+      console.log('User joined:', user.name, socketId);
       handleUserJoined({ user });
+      
       if (socketId === socket.id) return;
 
-      // Only create peer connection if we have audio enabled
-      if (localStreamRef.current) {
-        const pc = createPeerConnection(socketId, localStreamRef.current);
+      // Create peer connection - even if we don't have a stream yet
+      // The stream can be added later when user unmutes
+      const pc = createPeerConnection(socketId, localStreamRef.current);
 
+      // Only send offer if we have a local stream (user has unmuted)
+      if (localStreamRef.current) {
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
         socket.emit("offer", { to: socketId, offer });
+      } else {
+        // If no stream yet, we'll renegotiate when user unmutes
+        console.log('User joined but local stream not available yet (still muted)');
       }
-    });
+    };
 
-    socket.on("user-left", ({ memberId, socketId }) => {
+    const handleUserLeftEvent = ({ memberId, socketId }: { memberId: string, socketId: string }) => {
+      console.log('User left:', memberId, socketId);
       handleUserLeft({ memberId });
+      cleanupPeerConnection(socketId);
+    };
 
-      if (peers[socketId]) {
-        peers[socketId].close();
-        delete peers[socketId];
-      }
-
-      if (remoteAudioElements[socketId]) {
-        const stream = remoteAudioElements[socketId].srcObject as MediaStream | null;
-        if (stream) {
-          stream.getTracks().forEach(track => track.stop());
-        }
-
-        document.body.removeChild(remoteAudioElements[socketId]);
-        delete remoteAudioElements[socketId];
-      }
-    });
+    socket.on("user-joined", handleUserJoinedEvent);
+    socket.on("user-left", handleUserLeftEvent);
 
     return () => {
-      socket.off("user-joined");
-      socket.off("user-left");
+      socket.off("user-joined", handleUserJoinedEvent);
+      socket.off("user-left", handleUserLeftEvent);
     };
-  }, [socket, roomId, createPeerConnection, handleUserJoined, handleUserLeft, localStreamRef]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socket, roomId, hasJoinedRoom.current, localStreamRef, createPeerConnection, cleanupPeerConnection, handleUserJoined, handleUserLeft]);
 
+  // Handle WebRTC signaling
   useEffect(() => {
     if (!socket || !roomId || !hasJoinedRoom.current) return;
 
-    socket.on("offer", async ({ from, offer }) => {
+    const handleOffer = async ({ from, offer }: { from: string, offer: RTCSessionDescriptionInit }) => {
+      console.log('Received offer from:', from);
       let pc = peers[from];
-      if (!pc && localStreamRef.current) {
+      if (!pc) {
         pc = createPeerConnection(from, localStreamRef.current);
       }
 
@@ -218,52 +252,95 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
         await pc.setLocalDescription(answer);
         socket.emit("answer", { to: from, answer });
       }
-    });
+    };
 
-    socket.on("answer", async ({ from, answer }) => {
+    const handleAnswer = async ({ from, answer }: { from: string, answer: RTCSessionDescriptionInit }) => {
+      console.log('Received answer from:', from);
       const pc = peers[from];
       if (pc && pc.signalingState === "have-local-offer") {
         await pc.setRemoteDescription(new RTCSessionDescription(answer));
       }
-    });
+    };
 
-    socket.on("ice-candidate", async ({ from, candidate }) => {
+    const handleIceCandidate = async ({ from, candidate }: { from: string, candidate: RTCIceCandidateInit }) => {
       const pc = peers[from];
       if (pc) {
         await pc.addIceCandidate(new RTCIceCandidate(candidate));
       }
-    });
+    };
+
+    socket.on("offer", handleOffer);
+    socket.on("answer", handleAnswer);
+    socket.on("ice-candidate", handleIceCandidate);
 
     return () => {
-      socket.off("offer");
-      socket.off("answer");
-      socket.off("ice-candidate");
+      socket.off("offer", handleOffer);
+      socket.off("answer", handleAnswer);
+      socket.off("ice-candidate", handleIceCandidate);
     };
-  }, [socket, roomId, createPeerConnection, localStreamRef]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socket, roomId, hasJoinedRoom.current, localStreamRef, createPeerConnection]);
 
-  // Cleanup on unmount
+  // Watch for localStreamRef changes (when user unmutes and gets microphone)
+  useEffect(() => {
+    if (!socket || !roomId || !hasJoinedRoom.current) return;
+    if (!localStreamRef.current) return;
+
+    console.log('Local stream became available, renegotiating with all peers');
+
+    // When user unmutes and microphone becomes available, renegotiate with all existing peers
+    const renegotiateWithPeers = async () => {
+      for (const socketId of Object.keys(peers)) {
+        const pc = peers[socketId];
+        
+        // Add new tracks to existing peer connection
+        localStreamRef.current?.getTracks().forEach(track => {
+          const senders = pc.getSenders();
+          const trackExists = senders.some(sender => sender.track === track);
+          if (!trackExists) {
+            pc.addTrack(track, localStreamRef.current!);
+          }
+        });
+
+        // Create new offer with audio track
+        try {
+          const offer = await pc.createOffer();
+          await pc.setLocalDescription(offer);
+          socket.emit("offer", { to: socketId, offer });
+          console.log('Sent renegotiation offer to', socketId);
+        } catch (error) {
+          console.error('Failed to renegotiate with', socketId, error);
+        }
+      }
+    };
+
+    renegotiateWithPeers();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localStreamRef.current, socket, roomId, hasJoinedRoom.current]);
+
+  // Cleanup on unmount - DON'T stop audio if user joined (they're going to RoomLayout)
   useEffect(() => {
     return () => {
-      stopAudio(currentUser?.id || "");
-      Object.keys(peers).forEach(socketId => {
-        peers[socketId].close();
-        delete peers[socketId];
-      });
-      Object.keys(remoteAudioElements).forEach(socketId => {
-        const stream = remoteAudioElements[socketId].srcObject as MediaStream | null;
-        if (stream) {
-          stream.getTracks().forEach(track => track.stop());
-        }
-        if (remoteAudioElements[socketId].parentNode) {
-          document.body.removeChild(remoteAudioElements[socketId]);
-        }
-        delete remoteAudioElements[socketId];
-      });
+      // Only cleanup if user didn't join (e.g., closed modal without joining)
+      if (!hasJoinedRoom.current && currentUser?.id) {
+        stopAudio(currentUser.id);
+        Object.keys(peers).forEach(socketId => {
+          cleanupPeerConnection(socketId);
+        });
+      }
     };
-  }, [stopAudio, currentUser?.id]);
+  }, [stopAudio, currentUser?.id, cleanupPeerConnection]);
 
   const handleBackToHome = () => {
-    stopAudio(currentUser?.id || "");
+    if (currentUser?.id) {
+      stopAudio(currentUser.id);
+    }
+    
+    // Clean up all peer connections
+    Object.keys(peers).forEach(socketId => {
+      cleanupPeerConnection(socketId);
+    });
+    
     router.push(`/practicezoon`);
   }
 
@@ -296,11 +373,12 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
               </div>
               <div className="flex gap-2">
                 <button
-                  className="bg-green-500/90 hover:bg-green-500 text-white px-6 py-2 rounded-lg transition-colors flex items-center gap-2"
+                  className="bg-green-500/90 hover:bg-green-500 text-white px-6 py-2 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isLoading}
                   onClick={joinRoomHandler}
                 >
-                  <DoorOpen size={20} />Join Room
+                  <DoorOpen size={20} />
+                  {isLoading ? 'Joining...' : 'Join Room'}
                 </button>
               </div>
             </div>
@@ -310,17 +388,12 @@ export default function RoomDetailsModal({ isOpen, onClose, handleUserJoined, ha
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {room.members.map((member) => (
                   <div key={member.id} className="flex items-center gap-4 p-4 bg-gray-800/50 rounded-lg">
-                    {/* <img
-                      src={member.avatar}
-                      alt={member.name}
-                      className="w-12 h-12 rounded-full"
-                    /> */}
                     <Image
                       src={member.avatar || ""}
                       alt={member.name}
                       width={48}
                       height={48}
-                      className="w-12 h-12 rounded-full"
+                      className="w-12 h-12 rounded-full object-cover"
                     />
                     <div>
                       <div className="flex items-center gap-2">
