@@ -1,116 +1,78 @@
+// app/practicezoon/[id]/page.tsx
 "use client";
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import { useGetSingleRoomQuery } from '@/libs/features/room/roomApiSlice';
-import { RoomType } from '@/types/room';
-import RoomLayout from '@/components/practicezoon/Room/RoomLayout';
-import { BackgroundPattern } from '@/components/background/BackgroundPattern';
-import RoomDetailsModal from '@/components/practicezoon/Room/RoomDetailsModal';
-// import { useSocket } from '@/hooks/useSocket';
-import { getSocket } from '@/libs/socket';
-import { useAppSelector } from '@/libs/hooks';
-import { isRoomResponse } from '@/utils/typeGuardsForRoom';
+import React, { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { useGetSingleRoomQuery } from "@/libs/features/room/roomApiSlice";
+import { RoomType } from "@/types/room";
+import RoomLayout from "@/components/practicezoon/Room/RoomLayout";
+import { BackgroundPattern } from "@/components/background/BackgroundPattern";
+import RoomDetailsModal from "@/components/practicezoon/Room/RoomDetailsModal";
+import { socketManager } from "@/libs/socket/index";
+import { useAppSelector } from "@/libs/hooks";
+import { isRoomResponse } from "@/utils/typeGuardsForRoom";
 
-const VideoConference = () => {
+export default function VideoConference() {
   const [room, setRoom] = useState<RoomType | null>(null);
-  const [layout, setLayout] = useState<'grid' | 'spotlight'>('grid');
+  const [layout] = useState<"grid" | "spotlight">("grid");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isJoined, setIsJoined] = useState(false);
 
   const { id } = useParams();
-  const roomId = Array.isArray(id) ? id[0] : id ?? '';
-  const { data: singleRoomData, isSuccess, refetch } = useGetSingleRoomQuery(roomId, {
+  const roomId = Array.isArray(id) ? id[0] : (id ?? "");
+  const { data, isSuccess, refetch } = useGetSingleRoomQuery(roomId, {
     refetchOnMountOrArgChange: true,
   });
-
   const currentUser = useAppSelector((state) => state.auth.user);
-  const socket = getSocket();
-  console.log("single room data:", room);
-  console.log(isRoomResponse(singleRoomData));
-  useEffect(() => {
-    if (singleRoomData && isSuccess && isRoomResponse(singleRoomData)) {
-      setRoom(singleRoomData.data);
-    }
-  }, [singleRoomData, isSuccess]);
 
-  // ✅ Handle user leaving tab/window
+  useEffect(() => {
+    if (data && isSuccess && isRoomResponse(data)) setRoom(data.data);
+  }, [data, isSuccess]);
+
+  // Emit leave on tab/window close
   useEffect(() => {
     const handleBeforeUnload = () => {
-      // ❗ Synchronous cleanup only
-      if (socket && currentUser?.id) {
-        socket.emit('leave-room', { roomId, memberId: currentUser.id });
-      }
+      socketManager.emit("leave-room", { roomId, memberId: currentUser?.id });
     };
 
-    if (room?.members.find((member) => member.id === currentUser?.id)) {
-      window.addEventListener("beforeunload", handleBeforeUnload);
-    }
-
+    const inRoom = room?.members.some((m) => m.id === currentUser?.id);
+    if (inRoom) window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [room, currentUser, socket, roomId]);
+  }, [room, currentUser, roomId]);
 
-  const handleUserJoined = ({ user }: { user: { id: string, name: string } }) => {
-    console.log('user joined', user);
-    setRoom((prevRoom) => {
-      if (!prevRoom) return prevRoom;
-      const alreadyExists = prevRoom.members.some((member) => member.id === user.id);
-      if (alreadyExists) return prevRoom;
-      return {
-        ...prevRoom,
-        members: [...prevRoom.members, user],
-      };
+  const handleUserJoined = ({ user }: { user: { id: string; name: string } }) => {
+    setRoom((prev) => {
+      if (!prev) return prev;
+      if (prev.members.some((m) => m.id === user.id)) return prev;
+      return { ...prev, members: [...prev.members, user] };
     });
-
     refetch();
   };
 
-  const handleUserLeft = async ({ memberId }: { memberId: string }) => {
-    console.log("user left", memberId);
-    setRoom((prevRoom) => {
-      if (!prevRoom) return prevRoom;
-      return {
-        ...prevRoom,
-        members: prevRoom.members.filter((member) => member.id !== memberId),
-      };
+  const handleUserLeft = ({ memberId }: { memberId: string }) => {
+    setRoom((prev) => {
+      if (!prev) return prev;
+      return { ...prev, members: prev.members.filter((m) => m.id !== memberId) };
     });
   };
 
-  useEffect(() => {
-    setLayout('grid');
-  }, []);
-
-  // useEffect(() => {
-  //   const handleMsg = (data) => {
-  //     console.log("📩 Got message on client:", data);
-  //   };
-
-  //   if (socket) {
-  //     socket.on("messageReceived", handleMsg);
-  //   }
-
-  //   return () => {
-  //     if (socket) {
-  //       socket.off("messageReceived", handleMsg);
-  //     }
-  //   };
-  // }, [socket]);
-
-
   return (
     <div className="flex min-h-screen relative bg-[#1C1C1C]">
-      {/* Room details modal */}
-      <RoomDetailsModal isOpen={isJoined} onClose={() => setIsJoined(true)} handleUserJoined={handleUserJoined} handleUserLeft={handleUserLeft} />
-
+      <RoomDetailsModal
+        isOpen={isJoined}
+        onClose={() => setIsJoined(true)}
+        handleUserJoined={handleUserJoined}
+        handleUserLeft={handleUserLeft}
+      />
       <BackgroundPattern />
-      {isJoined && <RoomLayout
-        room={room}
-        layout={layout}
-        isJoined={isJoined}
-        sidebarCollapsed={sidebarCollapsed}
-        setSidebarCollapsed={setSidebarCollapsed}
-      />}
+      {isJoined && (
+        <RoomLayout
+          room={room}
+          layout={layout}
+          isJoined={isJoined}
+          sidebarCollapsed={sidebarCollapsed}
+          setSidebarCollapsed={setSidebarCollapsed}
+        />
+      )}
     </div>
   );
-};
-
-export default VideoConference;
+}
