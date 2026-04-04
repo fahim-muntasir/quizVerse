@@ -1,14 +1,16 @@
 import React from 'react'
 import { RoomMember } from '@/types/room';
 import Image from 'next/image';
-import { Pin, Volume2, Crown, MicOff } from 'lucide-react';
+import { Pin, Volume2, Crown, MicOff, Mic } from 'lucide-react';
 import { generateIdenticonAvatar } from '@/utils/generateAvatar';
 
-export default function RoomParticipant({ member, isLarge = false, hostId, speakingUsers }: { member: RoomMember; isLarge?: boolean; hostId: string; speakingUsers: { [id: string]: boolean } }) {
+export default function RoomParticipant({ member, isLarge = false, hostId, speakingUsers, unMutedUsers }: { member: RoomMember; isLarge?: boolean; hostId: string; speakingUsers: string[]; unMutedUsers: string[] }) {
   const avatarSvg = member.avatar || generateIdenticonAvatar(member.name, 150);
 
-  const isSpeaking = speakingUsers[member.id] === true;
-
+  const isSpeaking = speakingUsers.includes(member.id);
+  const isUnMuted = unMutedUsers.includes(member.id);
+  
+  console.log(unMutedUsers, "Unmuted users in RoomParticipant");
   return (
     <div
       className={`relative bg-gray-800/50 border rounded-lg overflow-hidden group 
@@ -38,9 +40,15 @@ export default function RoomParticipant({ member, isLarge = false, hostId, speak
       {/* Video overlay controls */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent transition-opacity">
         <div className="absolute top-2 left-2 flex gap-1">
-          <button className="p-1.5 rounded-lg bg-gray-900/80 text-red-500 hover:bg-gray-800 transition-colors">
-            <MicOff size={16} />
-          </button>
+          {!isUnMuted ? (
+            <button className="p-1.5 rounded-lg bg-gray-900/80 text-red-500 hover:bg-gray-800 transition-colors">
+              <MicOff size={16} />
+            </button>
+          ) : (
+            <button className="p-1.5 rounded-lg bg-gray-900/80 text-green-500 hover:bg-gray-800 transition-colors">
+              <Mic size={16} />
+            </button>
+          )}
         </div>
       </div>
 

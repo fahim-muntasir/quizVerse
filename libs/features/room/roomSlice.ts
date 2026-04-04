@@ -1,21 +1,17 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-interface SpeakingUsersState {
-  [userId: string]: boolean;
-}
-
 interface RoomState {
   isAudioEnabled: boolean;
   isMuted: boolean;
-  speakingUsers: SpeakingUsersState;
-  mutedUsers: SpeakingUsersState;
+  speakingUsers: string[];
+  unMutedUsers: string[];
 }
 
 const initialState: RoomState = {
   isAudioEnabled: false,
   isMuted: false,
-  speakingUsers: {},
-  mutedUsers: {},
+  speakingUsers: [],
+  unMutedUsers: [],
 };
 
 const roomSlice = createSlice({
@@ -29,22 +25,22 @@ const roomSlice = createSlice({
       state.isMuted = action.payload;
     },
     setSpeakingUser: (state, action: PayloadAction<string>) => {
-      state.speakingUsers[action.payload] = true;
+      state.speakingUsers = [...state.speakingUsers, action.payload];
     },
     removeSpeakingUser: (state, action: PayloadAction<string>) => {
-      delete state.speakingUsers[action.payload];
+      state.speakingUsers = state.speakingUsers.filter((id) => id !== action.payload);
     },
-    setMutedUser: (state, action: PayloadAction<string>) => {
-      state.mutedUsers[action.payload] = true;
+    setUnMutedUser: (state, action: PayloadAction<string>) => {
+      state.unMutedUsers = [...state.unMutedUsers, action.payload];
     },
-    removeMutedUser: (state, action: PayloadAction<string>) => {
-      delete state.mutedUsers[action.payload];
+    removeUnMutedUser: (state, action: PayloadAction<string>) => {
+      state.unMutedUsers = state.unMutedUsers.filter((id) => id !== action.payload);
     },
     clearSpeakingUsers: (state) => {
-      state.speakingUsers = {};
+      state.speakingUsers = [];
     },
-    clearMutedUsers: (state) => {
-      state.mutedUsers = {};
+    clearUnMutedUsers: (state) => {
+      state.unMutedUsers = [];
     }
   },
 });
@@ -55,9 +51,9 @@ export const {
   setSpeakingUser,
   removeSpeakingUser,
   clearSpeakingUsers,
-  setMutedUser,
-  removeMutedUser,
-  clearMutedUsers,
+  setUnMutedUser,
+  removeUnMutedUser,
+  clearUnMutedUsers,
 } = roomSlice.actions;
 
 export default roomSlice.reducer;

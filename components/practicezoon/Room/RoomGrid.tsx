@@ -6,9 +6,10 @@ import CreateQuizModal from '@/components/CreateQuizModal';
 import ParticipantsQuizModal from '@/components/ParticipantsQuizModal';
 import { useSpeakingEvents } from '@/hooks/useSpeakingEvents';
 
-export default function RoomGrid({ layout, room, isJoined }: { layout: string, room: RoomType | null, isJoined: boolean }) {
+export default function RoomGrid({ layout, room, isJoined }: { layout: string, room: RoomType | null, isJoined: boolean,  }) {
+  
   const { isOpen: createQuizModalIsOpen } = useAppSelector(state => state.modal.createQuizModal);
-  const speakingUsers = useAppSelector(state => state.room.speakingUsers);
+  const { unMutedUsers, speakingUsers } = useAppSelector(state => state.room);
 
   useSpeakingEvents(room?.id || "");
 
@@ -24,16 +25,16 @@ export default function RoomGrid({ layout, room, isJoined }: { layout: string, r
         }`}>
         {layout === 'spotlight' ? (
           <>
-            <RoomParticipant member={room?.members[0]} isLarge hostId={room.hostId} speakingUsers={speakingUsers} />
+            <RoomParticipant member={room?.members[0]} isLarge hostId={room.hostId} speakingUsers={speakingUsers} unMutedUsers={unMutedUsers} />
             <div className="grid gap-4 grid-cols-1">
               {room?.members.slice(1).map((member) => (
-                <RoomParticipant key={member.id} member={member} hostId={room.hostId} speakingUsers={speakingUsers} />
+                <RoomParticipant key={member.id} member={member} hostId={room.hostId} speakingUsers={speakingUsers} unMutedUsers={unMutedUsers} />
               ))}
             </div>
           </>
         ) : (
           room?.members.map((member) => (
-            <RoomParticipant key={member.id} member={member} hostId={room.hostId} speakingUsers={speakingUsers} />
+            <RoomParticipant key={member.id} member={member} hostId={room.hostId} speakingUsers={speakingUsers} unMutedUsers={unMutedUsers} />
           ))
         )}
 

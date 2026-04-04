@@ -5,24 +5,23 @@ const ICE_SERVERS: RTCConfiguration = {
   iceServers: [
     { urls: "stun:stun.l.google.com:19302" },
     { urls: "stun:stun1.l.google.com:19302" },
+    { urls: "stun:stun2.l.google.com:19302" },
   ],
 };
 
 export type PeerEventType = "track" | "connected" | "disconnected" | "failed";
 export type PeerEventHandler = (socketId: string, event?: RTCTrackEvent) => void;
 
-/**
- * PeerManager — owns all RTCPeerConnections for a single room session.
- *
- * Create one instance per room join. Destroy it on leave.
- * This avoids the module-level global state anti-pattern.
- */
 export class PeerManager {
   private peers: Map<string, RTCPeerConnection> = new Map();
   private remoteAudioElements: Map<string, HTMLAudioElement> = new Map();
   private eventHandlers: Map<PeerEventType, Set<PeerEventHandler>> = new Map();
+  // Buffer ICE candidates that arrive before remote description is set
+  private iceCandidateBuffer: Map<string, RTCIceCandidateInit[]> = new Map();
 
-  constructor(private readonly roomId: string) {}
+  constructor(private readonly roomId: string) {
+    console.log(`[PeerManager] Created for room: ${roomId}`);
+  }
 
   on(event: PeerEventType, handler: PeerEventHandler): () => void {
     if (!this.eventHandlers.has(event)) {
@@ -32,7 +31,7 @@ export class PeerManager {
     return () => this.eventHandlers.get(event)?.delete(handler);
   }
 
-  private emit(event: PeerEventType, socketId: string, data?: RTCTrackEvent) {
+  private fireEvent(event: PeerEventType, socketId: string, data?: RTCTrackEvent) {
     this.eventHandlers.get(event)?.forEach((h) => h(socketId, data));
   }
 
@@ -41,15 +40,21 @@ export class PeerManager {
 
     const pc = new RTCPeerConnection(ICE_SERVERS);
 
+    // Add local tracks immediately if stream is available
     if (stream) {
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
     }
 
+    // Remote audio
     pc.ontrack = (event) => {
-      this.attachRemoteAudio(socketId, event.streams[0]);
-      this.emit("track", socketId, event);
+      console.log(`[PeerManager] Got remote track from ${socketId}`, event.track.kind);
+      if (event.track.kind === "audio") {
+        this.attachRemoteAudio(socketId, event.streams[0]);
+      }
+      this.fireEvent("track", socketId, event);
     };
 
+    // ICE — buffer candidates if not yet ready
     pc.onicecandidate = (event) => {
       if (event.candidate) {
         socketManager.emit("ice-candidate", {
@@ -59,18 +64,25 @@ export class PeerManager {
       }
     };
 
+    pc.onicegatheringstatechange = () => {
+      console.log(`[PeerManager] ICE gathering: ${pc.iceGatheringState} (${socketId})`);
+    };
+
     pc.onconnectionstatechange = () => {
       const state = pc.connectionState;
-      if (state === "connected") this.emit("connected", socketId);
-      if (state === "disconnected") this.emit("disconnected", socketId);
-      if (state === "failed") {
-        this.emit("failed", socketId);
-        console.warn(`[PeerManager] Connection failed with ${socketId}. Cleaning up.`);
+      console.log(`[PeerManager] Connection state with ${socketId}: ${state}`);
+      if (state === "connected") {
+        this.fireEvent("connected", socketId);
+      } else if (state === "disconnected") {
+        this.fireEvent("disconnected", socketId);
+      } else if (state === "failed") {
+        this.fireEvent("failed", socketId);
         this.closeConnection(socketId);
       }
     };
 
     this.peers.set(socketId, pc);
+    this.iceCandidateBuffer.set(socketId, []);
     return pc;
   }
 
@@ -79,18 +91,29 @@ export class PeerManager {
     if (!pc) return;
 
     const senders = pc.getSenders();
-    stream.getTracks().forEach((track) => {
-      const exists = senders.some((s) => s.track === track);
-      if (!exists) pc.addTrack(track, stream);
-    });
+    for (const track of stream.getTracks()) {
+      const alreadySending = senders.some((s) => s.track?.id === track.id);
+      if (!alreadySending) {
+        pc.addTrack(track, stream);
+      }
+    }
   }
 
   async createOffer(socketId: string): Promise<void> {
     const pc = this.peers.get(socketId);
     if (!pc) return;
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    socketManager.emit("offer", { to: socketId, offer });
+
+    try {
+      const offer = await pc.createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: false, // video-ready: change to true when adding video
+      });
+      await pc.setLocalDescription(offer);
+      socketManager.emit("offer", { to: socketId, offer });
+      console.log(`[PeerManager] Sent offer to ${socketId}`);
+    } catch (err) {
+      console.error(`[PeerManager] createOffer failed for ${socketId}:`, err);
+    }
   }
 
   async handleOffer(
@@ -99,27 +122,90 @@ export class PeerManager {
     stream: MediaStream | null
   ): Promise<void> {
     let pc = this.peers.get(socketId);
-    if (!pc) pc = this.createConnection(socketId, stream);
+    if (!pc) {
+      pc = this.createConnection(socketId, stream);
+    } else if (stream) {
+      // Ensure tracks are added even on renegotiation
+      await this.addTracksToConnection(socketId, stream);
+    }
 
-    await pc.setRemoteDescription(new RTCSessionDescription(offer));
-    const answer = await pc.createAnswer();
-    await pc.setLocalDescription(answer);
-    socketManager.emit("answer", { to: socketId, answer });
-  }
+    try {
+      await pc.setRemoteDescription(new RTCSessionDescription(offer));
+      // Flush buffered ICE candidates now that remote description is set
+      await this.flushIceCandidates(socketId);
 
-  async handleAnswer(socketId: string, answer: RTCSessionDescriptionInit): Promise<void> {
-    const pc = this.peers.get(socketId);
-    if (pc?.signalingState === "have-local-offer") {
-      await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      socketManager.emit("answer", { to: socketId, answer });
+      console.log(`[PeerManager] Sent answer to ${socketId}`);
+    } catch (err) {
+      console.error(`[PeerManager] handleOffer failed for ${socketId}:`, err);
     }
   }
 
-  async handleIceCandidate(socketId: string, candidate: RTCIceCandidateInit): Promise<void> {
+  async handleAnswer(
+    socketId: string,
+    answer: RTCSessionDescriptionInit
+  ): Promise<void> {
     const pc = this.peers.get(socketId);
-    if (pc) await pc.addIceCandidate(new RTCIceCandidate(candidate));
+    if (!pc) {
+      console.warn(`[PeerManager] handleAnswer: no peer for ${socketId}`);
+      return;
+    }
+    if (pc.signalingState !== "have-local-offer") {
+      console.warn(`[PeerManager] handleAnswer: wrong state ${pc.signalingState} for ${socketId}`);
+      return;
+    }
+    try {
+      await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      await this.flushIceCandidates(socketId);
+      console.log(`[PeerManager] Set remote answer from ${socketId}`);
+    } catch (err) {
+      console.error(`[PeerManager] handleAnswer failed for ${socketId}:`, err);
+    }
+  }
+
+  async handleIceCandidate(
+    socketId: string,
+    candidate: RTCIceCandidateInit
+  ): Promise<void> {
+    const pc = this.peers.get(socketId);
+    if (!pc) return;
+
+    // If remote description isn't set yet, buffer the candidate
+    if (!pc.remoteDescription) {
+      const buffer = this.iceCandidateBuffer.get(socketId) ?? [];
+      buffer.push(candidate);
+      this.iceCandidateBuffer.set(socketId, buffer);
+      console.log(`[PeerManager] Buffered ICE candidate for ${socketId}`);
+      return;
+    }
+
+    try {
+      await pc.addIceCandidate(new RTCIceCandidate(candidate));
+    } catch (err) {
+      console.error(`[PeerManager] addIceCandidate failed for ${socketId}:`, err);
+    }
+  }
+
+  private async flushIceCandidates(socketId: string): Promise<void> {
+    const pc = this.peers.get(socketId);
+    const buffer = this.iceCandidateBuffer.get(socketId) ?? [];
+    if (!pc || buffer.length === 0) return;
+
+    console.log(`[PeerManager] Flushing ${buffer.length} buffered ICE candidates for ${socketId}`);
+    for (const candidate of buffer) {
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (err) {
+        console.error("[PeerManager] Failed to flush ICE candidate:", err);
+      }
+    }
+    this.iceCandidateBuffer.set(socketId, []);
   }
 
   async renegotiateAll(stream: MediaStream): Promise<void> {
+    console.log(`[PeerManager] Renegotiating with ${this.peers.size} peers`);
     for (const socketId of this.peers.keys()) {
       await this.addTracksToConnection(socketId, stream);
       await this.createOffer(socketId);
@@ -127,22 +213,32 @@ export class PeerManager {
   }
 
   closeConnection(socketId: string): void {
-    this.peers.get(socketId)?.close();
-    this.peers.delete(socketId);
+    const pc = this.peers.get(socketId);
+    if (pc) {
+      pc.ontrack = null;
+      pc.onicecandidate = null;
+      pc.onconnectionstatechange = null;
+      pc.close();
+      this.peers.delete(socketId);
+    }
 
     const audio = this.remoteAudioElements.get(socketId);
     if (audio) {
-      (audio.srcObject as MediaStream | null)?.getTracks().forEach((t) => t.stop());
+      audio.pause();
+      audio.srcObject = null;
       audio.parentNode?.removeChild(audio);
       this.remoteAudioElements.delete(socketId);
     }
+
+    this.iceCandidateBuffer.delete(socketId);
   }
 
   closeAll(): void {
-    for (const socketId of this.peers.keys()) {
+    for (const socketId of [...this.peers.keys()]) {
       this.closeConnection(socketId);
     }
     this.eventHandlers.clear();
+    console.log(`[PeerManager] Closed all connections for room: ${this.roomId}`);
   }
 
   hasPeer(socketId: string): boolean {
@@ -154,18 +250,42 @@ export class PeerManager {
   }
 
   private attachRemoteAudio(socketId: string, stream: MediaStream): void {
-    // Remove stale element if exists
+    // Remove stale element
     const existing = this.remoteAudioElements.get(socketId);
     if (existing) {
+      existing.pause();
       existing.srcObject = null;
       existing.parentNode?.removeChild(existing);
     }
 
     const audio = document.createElement("audio");
-    audio.srcObject = stream;
-    audio.autoplay = true;
     audio.id = `remote-audio-${socketId}`;
+    audio.autoplay = true;
+    audio.muted = false;
+    audio.volume = 1.0;
+    // playsInline needed on iOS
+    audio.setAttribute("playsinline", "");
+
+    audio.srcObject = stream;
+
+    // Some browsers need explicit play() call after srcObject assignment
+    audio.onloadedmetadata = () => {
+      audio.play().catch((err) => {
+        console.warn(`[PeerManager] Audio autoplay blocked for ${socketId}:`, err);
+        // Retry on next user interaction
+        const retry = () => {
+          audio.play().catch(console.error);
+          document.removeEventListener("click", retry);
+        };
+        document.addEventListener("click", retry, { once: true });
+      });
+    };
+
+    // Hide from layout but keep it in DOM for audio routing
+    audio.style.cssText = "position:absolute;width:0;height:0;opacity:0;pointer-events:none;";
     document.body.appendChild(audio);
     this.remoteAudioElements.set(socketId, audio);
+
+    console.log(`[PeerManager] Attached remote audio for ${socketId}`);
   }
 }

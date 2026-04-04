@@ -8,6 +8,8 @@ import ControlButton from './ControlButton';
 import { useAudio } from '@/context/AudioContext';
 import { useAppSelector } from '@/libs/hooks';
 import { useParams } from 'next/navigation';
+import { useAppDispatch } from '@/libs/hooks';
+import { setUnMutedUser, removeUnMutedUser } from '@/libs/features/room/roomSlice';
 
 export default function ControlsBar() {
   const [isVideoOff, setIsVideoOff] = useState(false);
@@ -17,6 +19,8 @@ export default function ControlsBar() {
   const currentUser = useAppSelector(state => state.auth.user);
   const { id } = useParams();
   const roomId = Array.isArray(id) ? (id[0] ?? '') : (id ?? '');
+
+  const dispatch = useAppDispatch();
 
   const handleLeaveRoom = async () => {
     window.location.reload();
@@ -28,6 +32,16 @@ export default function ControlsBar() {
     }, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  const muteHandler = () => {
+    toggleMute(roomId, currentUser?.id || '');
+
+    if (isMuted) {
+      dispatch(setUnMutedUser(currentUser?.id || ''));
+    } else {
+      dispatch(removeUnMutedUser(currentUser?.id || ''));
+    }
+  }
 
   return (
     <div className="relative h-24 w-full bg-background backdrop-blur-sm border-t border-gray-800">
@@ -41,7 +55,7 @@ export default function ControlsBar() {
         <ControlButton
           icon={isMuted ? MicOff : Mic}
           active={!isMuted}
-          onClick={() => toggleMute(roomId, currentUser?.id || '')}
+          onClick={muteHandler}
           label='Mute/Unmute'
         />
         <ControlButton
