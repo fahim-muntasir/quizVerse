@@ -1,177 +1,243 @@
-import React from 'react';
-// import { Smile, Reply, Pencil, Trash2 } from 'lucide-react';
-// import SingleQuiz from '../RoomQuizzes/SingleQuiz';
-import ChatInputs from './ChatInputs';
+"use client";
+import React, { useState, useEffect, useRef } from "react";
+import { Smile, Reply, Pencil, Trash2 } from "lucide-react";
+import { Message } from '@/types/chat';
+import SingleQuiz from "../RoomQuizzes/SingleQuiz";
+import ChatInputs from "./ChatInputs";
 
-export default function Chat() {
-  // const [messages, setMessages] = useState([
-  //   {
-  //     id: 1,
-  //     sender: 'user',
-  //     name: 'You',
-  //     text: 'Hey! How are you doing?',
-  //     reactions: [
-  //       { emoji: '👍', users: ['Alex', 'John'] },
-  //       { emoji: '❤️', users: ['You'] },
-  //       { emoji: '😂', users: ['Sam', 'Emma'] }
-  //     ]
-  //   },
-  //   { id: 2, sender: 'other', name: 'Alex', text: 'I’m good, thanks! What about you?', reactions: [{ emoji: '❤️', users: ['You', 'Sam'] }, { emoji: '🔥', users: ['Emma'] }] },
-  //   { id: 3, sender: 'user', name: 'You', text: 'All good here! Ready for the meeting?', reactions: [{ emoji: '👍', users: ['Alex', 'Emma'] }] },
-  //   { id: 4, sender: 'other', name: 'Alex', text: 'Check this out! 🚀', emojiOnly: true, reactions: [{ emoji: '😂', users: ['Sam'] }, { emoji: '❤️', users: ['You', 'Emma'] }] },
-  //   { id: 5, sender: 'user', name: 'You', text: 'Here’s an image!', imageUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=1500', reactions: [{ emoji: '👍', users: ['Alex'] }] },
-  //   { id: 6, sender: 'other', name: 'Alex', text: 'Nice! Here’s a GIF', gifUrl: 'https://media.giphy.com/media/3ohs4Czz7j46NozUxs/giphy.gif', reactions: [{ emoji: '👍', users: ['You'] }, { emoji: '🔥', users: ['Sam', 'Emma'] }] },
-  //   { id: 7, sender: 'user', name: 'You', text: 'All set for the meeting?', replyTo: 2, reactions: [{ emoji: '❤️', users: ['Alex'] }] },
+export default function Chat({messages, setMessages}: {
+  messages: Message[];
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+}) {
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
-  //   {
-  //     id: 9,
-  //     sender: "user",
-  //     name: "You",
-  //     text: "Yo! Hope you're ready to get your brain tickled 😂",
-  //     reactions: [
-  //       { emoji: "👍", users: ["Alex", "John"] },
-  //       { emoji: "❤️", users: ["You"] },
-  //       { emoji: "😂", users: ["Sam", "Emma"] }
-  //     ],
-  //     quiz: {
-  //       title: "💻 The World's Goofiest Coding Quiz",
-  //       description: "Think you can debug a sandwich? Let’s find out with this fun little challenge!",
-  //       difficulty: "Easy",
-  //       category: "Programming",
-  //       participants: 5,
-  //       time: "10m",
-  //       points: 10
-  //     }
-  //   },
+  // Auto-scroll to bottom on new messages
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
-  //   {
-  //     id: 10,
-  //     sender: 'other',
-  //     name: 'Emma',
-  //     quizResult: {
-  //       title: "💻 The World's Goofiest Coding Quiz",
-  //       correct: 7,
-  //       total: 10,
-  //       score: 70,
-  //     },
-  //     reactions: [
-  //       { emoji: '🎉', users: ['You', 'Alex'] },
-  //       { emoji: '👏', users: ['Sam'] },
-  //     ],
-  //   }
+  // ChatInputs owns the socket emit. This callback only does two things:
+  // 1. Optimistically append the sender's own bubble immediately (no round-trip lag)
+  // 2. Clear the active reply thread
+  const handleSend = (payload: {
+    text?: string;
+    emojiOnly?: boolean;
+    imageUrl?: string;
+    gifUrl?: string;
+  }) => {
 
-  // ]);
+    if (!payload.text?.trim() && !payload.imageUrl && !payload.gifUrl) return;
 
+    const optimistic: Message = {
+      id: `optimistic-${Date.now()}`,
+      sender: "user",
+      name: "You",
+      ...payload,
+      replyTo: replyTo
+        ? {
+          id: replyTo.id,
+          name: replyTo.name,
+          text: replyTo.text,
+        }
+        : undefined,
+      reactions: [],
+    };
+
+    setMessages((prev) => [...prev, optimistic]);
+    setReplyTo(null);
+  };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)]">
-
+    <div className="flex flex-col h-[calc(100vh-64px)]">
       {/* Messages */}
-      {/* <div className="flex-1 p-4 space-y-8 overflow-y-auto">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div className="flex flex-col items-start max-w-xs md:max-w-md group">
-              <span className="text-xs text-gray-400 mb-1">
-                {msg.sender === 'user' ? 'You' : msg.name}
-              </span>
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+        {messages.length === 0 && (
+          <div className="flex flex-col items-center justify-center gap-2 text-center">
+            <div className="w-10 h-10 rounded-xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-lg">
+              💬
+            </div>
+            <p className="text-sm text-gray-500">No messages yet</p>
+            <p className="text-xs text-gray-600">Say something to get the conversation started</p>
+          </div>
+        )}
 
-            
+        {messages.map((msg) => {
+          const isOwn = msg.sender === "user";
+
+          const replySource = msg.replyTo;
+
+          return (
+            <div
+              key={msg.id}
+              className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
+            >
               <div
-                className={`relative px-4 py-2 rounded-lg text-sm break-words ${msg.sender === 'user'
-                  ? 'bg-primary/70 text-white rounded-br-none'
-                  : 'bg-gray-700/40 text-white rounded-bl-none'
-                  }`}
+                className={`flex flex-col max-w-[75%] group ${isOwn ? "items-end" : "items-start"}`}
               >
-                {msg.replyTo && (
-                  <div className="bg-gray-700 text-xs p-2 mb-2 rounded-md">
-                    <span className="font-semibold">{messages.find((m) => m.id === msg.replyTo)?.name}</span>:
-                    {messages.find((m) => m.id === msg.replyTo)?.text}
-                  </div>
-                )}
+                {/* Sender name */}
+                <span className="text-[11px] text-gray-500 mb-1 px-1">
+                  {isOwn ? "You" : msg.name}
+                </span>
 
-                {msg.text && !msg.emojiOnly && msg.text}
+                {/* Bubble */}
+                <div
+                  className={`relative px-3.5 py-2.5 rounded-2xl text-sm break-words leading-relaxed
+                    ${isOwn
+                      ? "bg-emerald-500/20 text-white border border-emerald-500/20 rounded-br-sm"
+                      : "bg-white/[0.07] text-white border border-white/[0.08] rounded-bl-sm"
+                    }`}
+                >
+                  {/* Reply preview */}
+                  {replySource && (
+                    <div className="bg-white/[0.07] border-l-2 border-emerald-500/60 text-xs px-2.5 py-1.5 mb-2 rounded-lg">
+                      <span className="font-semibold text-emerald-400">
+                        {replySource.name}
+                      </span>
+                      <p className="text-gray-400 mt-0.5 truncate max-w-[200px]">
+                        {replySource.text}
+                      </p>
+                    </div>
+                  )}
 
-                
-                {msg.emojiOnly && <span className="text-2xl">{msg.text}</span>}
+                  {/* Text content */}
+                  {msg.text && !msg.emojiOnly && (
+                    <span>{msg.text}</span>
+                  )}
 
-                
-                {msg.imageUrl && (
-                  <div className="mt-2">
-                    <img src={msg.imageUrl} alt="uploaded" className="w-36 h-36 object-cover rounded-md" />
-                  </div>
-                )}
+                  {/* Emoji-only */}
+                  {msg.emojiOnly && (
+                    <span className="text-3xl leading-none">{msg.text}</span>
+                  )}
 
-                
-                {msg.gifUrl && (
-                  <div className="mt-2">
-                    <img src={msg.gifUrl} alt="gif" className="w-36 h-36 object-cover rounded-md" />
-                  </div>
-                )}
+                  {/* Image */}
+                  {msg.imageUrl && (
+                    <div className="mt-2">
+                      <img
+                        src={msg.imageUrl}
+                        alt="uploaded"
+                        className="w-44 h-44 object-cover rounded-xl border border-white/10"
+                      />
+                    </div>
+                  )}
 
-                
-                {msg?.quiz && <div className='mt-2'><SingleQuiz /></div>}
+                  {/* GIF */}
+                  {msg.gifUrl && (
+                    <div className="mt-2">
+                      <img
+                        src={msg.gifUrl}
+                        alt="gif"
+                        className="w-44 h-44 object-cover rounded-xl border border-white/10"
+                      />
+                    </div>
+                  )}
 
-                
-                {msg.quizResult && (
-                  <div className="mt-3 bg-gradient-to-br from-[#2d2d2d] to-[#1c1c1c] border-l-4 border-blue-500 rounded-lg p-4 shadow-lg text-white">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">👤</span>
-                        <span className="text-green-400 font-semibold">{msg.name}</span>
+                  {/* Quiz card */}
+                  {msg.quiz && (
+                    <div className="mt-2">
+                      <SingleQuiz />
+                    </div>
+                  )}
+
+                  {/* Quiz result */}
+                  {msg.quizResult && (
+                    <div className="mt-2 bg-white/[0.05] border border-white/[0.08] rounded-xl p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-semibold text-white">{msg.name}</span>
+                        <span className="text-base">🏆</span>
                       </div>
-                      <span className="text-lg" title="Participant Result">🏆</span>
+                      <p className="text-xs text-gray-400 mb-2 truncate">{msg.quizResult.title}</p>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-emerald-500 rounded-full"
+                            style={{ width: `${msg.quizResult.score}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-semibold text-emerald-400 shrink-0">
+                          {msg.quizResult.score}%
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {msg.quizResult.correct}/{msg.quizResult.total} correct
+                      </p>
                     </div>
-                    <div className="text-sm text-gray-300 mb-1">
-                      <span className="font-semibold text-white">{msg.quizResult.title}</span>
-                    </div>
-                    <div className="text-sm text-gray-300">
-                      Scored <span className="text-yellow-300 font-bold">{msg.quizResult.correct}</span> out of{' '}
-                      <span className="text-yellow-300">{msg.quizResult.total}</span> (
-                      <span className="text-blue-400 font-semibold">{msg.quizResult.score}%</span>)
-                    </div>
-                  </div>
-                )}
+                  )}
 
-                
-                <div className="flex gap-3 mt-2">
-                  {msg.reactions.map((reaction, index) => (
-                    <div key={index} className="flex items-center">
-                      <span className="text-lg cursor-pointer">{reaction.emoji}</span>
-                      <span className="text-xs text-white">{reaction.users.length}</span>
+                  {/* Reactions */}
+                  {msg.reactions.length > 0 && (
+                    <div className="flex gap-1.5 mt-2 flex-wrap">
+                      {msg.reactions.map((reaction, index) => (
+                        <button
+                          key={index}
+                          className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-white/[0.08] border border-white/[0.08] hover:bg-white/[0.12] transition-colors"
+                        >
+                          <span className="text-sm leading-none">{reaction.emoji}</span>
+                          <span className="text-[11px] text-gray-300 font-medium">
+                            {reaction.users.length}
+                          </span>
+                        </button>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
 
-                
-                <div className="absolute -bottom-6 right-0 flex gap-3 text-gray-400 text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  <button className="hover:text-white flex items-center gap-1">
-                    <Smile size={14} /> React
+                {/* Hover action row */}
+                <div
+                  className={`flex gap-2 mt-1 px-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150 ${isOwn ? "flex-row-reverse" : "flex-row"}`}
+                >
+                  <button className="flex items-center gap-1 text-[11px] text-gray-600 hover:text-gray-300 transition-colors">
+                    <Smile size={12} strokeWidth={2} /> React
                   </button>
-                  <button className="hover:text-white flex items-center gap-1">
-                    <Reply size={14} /> Reply
+                  <button
+                    className="flex items-center gap-1 text-[11px] text-gray-600 hover:text-gray-300 transition-colors"
+                    onClick={() => setReplyTo(msg)}
+                  >
+                    <Reply size={12} strokeWidth={2} /> Reply
                   </button>
-                  {msg.sender === 'user' && (
+                  {isOwn && (
                     <>
-                      <button className="hover:text-white flex items-center gap-1">
-                        <Pencil size={14} /> Edit
+                      <button className="flex items-center gap-1 text-[11px] text-gray-600 hover:text-gray-300 transition-colors">
+                        <Pencil size={12} strokeWidth={2} /> Edit
                       </button>
-                      <button className="hover:text-white flex items-center gap-1">
-                        <Trash2 size={14} /> Delete
+                      <button
+                        className="flex items-center gap-1 text-[11px] text-gray-600 hover:text-red-400 transition-colors"
+                        onClick={() => setMessages((prev) => prev.filter((m) => m.id !== msg.id))}
+                      >
+                        <Trash2 size={12} strokeWidth={2} /> Delete
                       </button>
                     </>
                   )}
                 </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div> */}
+          );
+        })}
 
-      {/* Input Field with Buttons */}
-      <ChatInputs />
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Reply preview bar */}
+      {replyTo && (
+        <div className="mx-4 mb-1 flex items-center justify-between px-3 py-2 rounded-xl bg-white/[0.05] border border-white/[0.08]">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-0.5 h-8 bg-emerald-500 rounded-full shrink-0" />
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold text-emerald-400">{replyTo.name}</p>
+              <p className="text-xs text-gray-500 truncate max-w-[200px]">{replyTo.text}</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setReplyTo(null)}
+            className="text-gray-600 hover:text-gray-300 transition-colors text-xs ml-3 shrink-0"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Input */}
+      <ChatInputs onSend={handleSend} replyTo={replyTo} />
     </div>
   );
 }

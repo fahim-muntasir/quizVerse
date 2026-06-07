@@ -15,6 +15,9 @@ export const apiSlice = createApi({
     const baseQuery = fetchBaseQuery({
       baseUrl: getApiBase(),
       prepareHeaders: (headers) => {
+        
+        headers.set("ngrok-skip-browser-warning", "true");
+
         try {
           const auth = JSON.parse(localStorage.getItem("auth") || "{}");
   

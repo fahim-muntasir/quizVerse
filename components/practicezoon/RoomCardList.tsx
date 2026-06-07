@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { RoomCard } from "./RoomCard";
 import { RoomType } from "@/types/room";
 import { useGetRoomsQuery } from "@/libs/features/room/roomApiSlice";
-import { useSocket } from "@/context/SocketContext";
+import { socketManager } from "@/libs/socket/index";
 import { isRoomsResponse } from "@/utils/typeGuardsForRoom";
 import EmptyRoomCard from "../common/EmptyRoomCard";
 
@@ -13,7 +13,6 @@ export default function RoomCardList() {
     refetchOnMountOrArgChange: true,
   });
   const [rooms, setRooms] = useState<RoomType[]>([]);
-  const { on } = useSocket();
 
   useEffect(() => {
     if (initialRooms && isRoomsResponse(initialRooms)) {
@@ -22,11 +21,19 @@ export default function RoomCardList() {
   }, [initialRooms]);
 
   useEffect(() => {
-    const unsubCreated = on("roomCreated", (payload: unknown) => {
-      setRooms((prev) => [payload as RoomType, ...prev]);
+    const unsubCreated = socketManager.on("roomCreated", (payload) => {
+      const room = payload as RoomType;
+
+      setRooms((prev) => {
+        if (prev.some((r) => r.id === room.id)) {
+          return prev;
+        }
+
+        return [room, ...prev];
+      });
     });
 
-    const unsubJoined = on("joinedMember", (payload: unknown) => {
+    const unsubJoined = socketManager.on("joinedMember", (payload: unknown) => {
       const data = payload as { roomId: string; newMember: RoomType["members"][number] };
       setRooms((prev) =>
         prev.map((room) => {
@@ -38,7 +45,7 @@ export default function RoomCardList() {
       );
     });
 
-    const unsubLeft = on("removedMember", (payload: unknown) => {
+    const unsubLeft = socketManager.on("removedMember", (payload: unknown) => {
       const data = payload as { roomId: string; memberId: string };
       setRooms((prev) =>
         prev.map((room) => {
@@ -56,7 +63,7 @@ export default function RoomCardList() {
       unsubJoined();
       unsubLeft();
     };
-  }, [on]);
+  }, []);
 
   if (!rooms || rooms.length === 0) return <EmptyRoomCard />;
 
